@@ -1,4 +1,4 @@
-package com.kshrd.warehouse_master.config;
+package com.heang.drms_api.config;
 
 import io.jsonwebtoken.*;
 import org.springframework.beans.factory.annotation.Value;
