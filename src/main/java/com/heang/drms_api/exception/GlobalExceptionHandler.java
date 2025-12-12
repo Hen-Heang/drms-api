@@ -1,11 +1,6 @@
 package com.heang.drms_api.exception;
-
-
 import com.heang.drms_api.common.api.ApiResponse;
-import com.heang.drms_api.common.api.ApiStatus;
 import com.heang.drms_api.common.api.ExitCode;
-import jakarta.security.auth.message.AuthException;
-import org.apache.coyote.BadRequestException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -21,59 +16,43 @@ import java.util.HashMap;
 import java.util.Map;
 
 @RestControllerAdvice
-
 public class GlobalExceptionHandler {
+
+    // 🔹 1. Resource isn't found (ex: entity not in DB)
     @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<ApiResponse<Object>> handleResourceNotFoundException(ResourceNotFoundException ex, WebRequest request) {
-        ApiResponse<Object> apiResponse = new ApiResponse<>(
-                new ApiStatus(ExitCode.SYSTEM_ERROR.getCode(), ExitCode.SYSTEM_ERROR.getMessage()),
+    public ResponseEntity<ApiResponse<Object>> handleResourceNotFoundException(
+            ResourceNotFoundException ex,
+            WebRequest request
+    ) {
+        ApiResponse<Object> body = ApiResponse.error(
+                ExitCode.SYSTEM_ERROR,   // later you can create specific code like NOT_FOUND
                 ex.getMessage()
         );
-
-        return new ResponseEntity<>(apiResponse, HttpStatus.NOT_FOUND);
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(body);
     }
 
-    @ExceptionHandler(BadRequestException.class)
-    public ResponseEntity<ApiResponse<Object>> handleBadRequestException(BadRequestException ex, WebRequest request) {
-        ApiResponse<Object> apiResponse = new ApiResponse<>(
-                new ApiStatus(ExitCode.SYSTEM_ERROR.getCode(), ExitCode.SYSTEM_ERROR.getMessage()),
+    // 🔹 2. Bat aquest (invàlid parameter format, etc.)
+    @ExceptionHandler(org.apache.coyote.BadRequestException.class)
+    public ResponseEntity<ApiResponse<Object>> handleBadRequestException(
+            org.apache.coyote.BadRequestException ex,
+            WebRequest request
+    ) {
+        ApiResponse<Object> body = ApiResponse.error(
+                ExitCode.REGISTRATION_FAILED,  // or create GENERIC_BAD_REQUEST
                 ex.getMessage()
         );
-        return new ResponseEntity<>(apiResponse, HttpStatus.BAD_REQUEST);
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(body);
     }
 
-    @ExceptionHandler(AuthenticationException.class)
-    public ResponseEntity<ApiResponse<Object>> handleAuthenticationException(AuthenticationException ex, WebRequest request) {
-        ApiResponse<Object> apiResponse = new ApiResponse<>(
-                new ApiStatus(ExitCode.SYSTEM_ERROR.getCode(), ExitCode.SYSTEM_ERROR.getMessage()),
-                ex.getMessage()
-        );
-
-        return new ResponseEntity<>(apiResponse, HttpStatus.UNAUTHORIZED);
-    }
-
-    @ExceptionHandler(BadCredentialsException.class)
-    public ResponseEntity<ApiResponse<Object>> handleBadCredentialsException(BadCredentialsException ex, WebRequest request) {
-        ApiResponse<Object> apiResponse = new ApiResponse<>(
-                new ApiStatus(ExitCode.SYSTEM_ERROR.getCode(), ExitCode.SYSTEM_ERROR.getMessage()),
-                ex.getMessage()
-        );
-
-        return new ResponseEntity<>(apiResponse, HttpStatus.UNAUTHORIZED);
-    }
-
-    @ExceptionHandler(AccessDeniedException.class)
-    public ResponseEntity<ApiResponse<Object>> handleAccessDeniedException(AccessDeniedException ex, WebRequest request) {
-        ApiResponse<Object> apiResponse = new ApiResponse<>(
-                new ApiStatus(ExitCode.SYSTEM_ERROR.getCode(), ExitCode.SYSTEM_ERROR.getMessage()),
-                ex.getMessage()
-        );
-
-        return new ResponseEntity<>(apiResponse, HttpStatus.FORBIDDEN);
-    }
-
+    // 🔹 3. Validation errors (@Valid DTO)
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ApiResponse<Object>> handleValidationExceptions(MethodArgumentNotValidException ex) {
+    public ResponseEntity<ApiResponse<Object>> handleValidationExceptions(
+            MethodArgumentNotValidException ex
+    ) {
         Map<String, String> errors = new HashMap<>();
         ex.getBindingResult().getAllErrors().forEach(error -> {
             String fieldName = ((FieldError) error).getField();
@@ -81,61 +60,81 @@ public class GlobalExceptionHandler {
             errors.put(fieldName, errorMessage);
         });
 
-        ApiResponse<Object> apiResponse = new ApiResponse<>(
-                new ApiStatus(ExitCode.SYSTEM_ERROR.getCode(), ExitCode.SYSTEM_ERROR.getMessage()),
+        ApiResponse<Object> body = ApiResponse.error(
+                ExitCode.REGISTRATION_FAILED,   // or create VALIDATION_ERROR code
+                errors                          // 👉 return “field -> message” map
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(body);
+    }
+
+    // 🔹 4. Authentication / login errors
+    @ExceptionHandler({AuthenticationException.class, BadCredentialsException.class})
+    public ResponseEntity<ApiResponse<Object>> handleAuthenticationException(
+            Exception ex,
+            WebRequest request
+    ) {
+        ApiResponse<Object> body = ApiResponse.error(
+                ExitCode.INVALID_CREDENTIALS,
                 ex.getMessage()
         );
 
-        return new ResponseEntity<>(apiResponse, HttpStatus.BAD_REQUEST);
+        return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
+                .body(body);
     }
 
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<ApiResponse<Object>> handleGlobalException(Exception ex, WebRequest request) {
-        ApiResponse<Object> apiResponse = new ApiResponse<>(
-                new ApiStatus(ExitCode.SYSTEM_ERROR.getCode(), ExitCode.SYSTEM_ERROR.getMessage()),
+    // 🔹 5. Access denied (no permission)
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ApiResponse<Object>> handleAccessDeniedException(
+            AccessDeniedException ex,
+            WebRequest request
+    ) {
+        ApiResponse<Object> body = ApiResponse.error(
+                ExitCode.INSUFFICIENT_PERMISSIONS,
                 ex.getMessage()
         );
 
-        return new ResponseEntity<>(apiResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+        return ResponseEntity
+                .status(HttpStatus.FORBIDDEN)
+                .body(body);
     }
 
+    // 🔹 6. Custom BusinessException (you already did this well)
     @ExceptionHandler(BusinessException.class)
-    public ResponseEntity<ApiResponse<Object>> handleBusinessException(BusinessException ex, WebRequest request) {
-        ApiResponse<Object> apiResponse = new ApiResponse<>(
-                new ApiStatus(ex.getErrorCode().getCode(), ex.getErrorCode().getMessage()),
+    public ResponseEntity<ApiResponse<Object>> handleBusinessException(
+            BusinessException ex,
+            WebRequest request
+    ) {
+        ApiResponse<Object> body = ApiResponse.error(
+                ex.getErrorCode(),
                 ex.getBody() != null ? ex.getBody() : ex.getMessage()
         );
 
-        return new ResponseEntity<>(apiResponse, HttpStatus.valueOf(ex.getErrorCode().getHttpCode()));
+        return ResponseEntity
+                .status(HttpStatus.valueOf(ex.getErrorCode().getHttpCode()))
+                .body(body);
     }
 
-    @ExceptionHandler(AuthException.class)
-    public ResponseEntity<ApiResponse<Object>> handleAuthException(AuthException ex, WebRequest request) {
-        ApiResponse<Object> apiResponse = new ApiResponse<>(
-                new ApiStatus(ExitCode.SYSTEM_ERROR.getCode(), ExitCode.SYSTEM_ERROR.getMessage()),
+    // 🔹 7. Fallback – unknown error
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ApiResponse<Object>> handleGlobalException(
+            Exception ex,
+            WebRequest request
+    ) {
+        ApiResponse<Object> body = ApiResponse.error(
+                ExitCode.UNKNOWN_ERROR,
                 ex.getMessage()
         );
 
-        return new ResponseEntity<>(apiResponse, HttpStatus.UNAUTHORIZED);
+        return ResponseEntity
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(body);
     }
-
-    private HttpStatus getHttpStatusForExitCode(ExitCode exitCode) {
-        int code = exitCode.getCode();
-
-        if (code >= 1000 && code < 1100) {
-            return HttpStatus.UNAUTHORIZED; // Authentication errors
-        } else if (code >= 1100 && code < 1200) {
-            return HttpStatus.BAD_REQUEST; // Registration errors
-        } else if (code >= 1200 && code < 1300) {
-            return HttpStatus.BAD_REQUEST; // Password reset errors
-        } else if (code >= 1300 && code < 1400) {
-            return HttpStatus.BAD_REQUEST; // OAuth errors
-        } else if (code >= 5000 && code < 6000) {
-            return HttpStatus.INTERNAL_SERVER_ERROR; // System errors
-        } else {
-            return HttpStatus.INTERNAL_SERVER_ERROR; // Default for unknown errors
-        }
-    }
-
-
 }
+
+
+
+

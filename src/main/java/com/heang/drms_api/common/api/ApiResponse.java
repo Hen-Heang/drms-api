@@ -33,4 +33,21 @@ public class ApiResponse<T> {
         this.data = data;
         this.common = common;
     }
+
+//    Helper: success with a default message
+public static <T> ApiResponse<T> success(T data) {
+    return new ApiResponse<>(new ApiStatus(ExitCode.SUCCESS), data);
+}
+
+// Helper: success with a customer status message
+public static <T> ApiResponse<T> success(ExitCode exitCode, T data) {
+    return new ApiResponse<>(new ApiStatus(exitCode), data);
+
+}
+
+// Helper: error with a default message
+    public static <T> ApiResponse<T> error(ExitCode exitCode, T data) {
+        return new ApiResponse<>(new ApiStatus(exitCode), data);
+    }
+
 }

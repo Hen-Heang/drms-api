@@ -23,13 +23,13 @@ import java.util.Map;
 import static org.springframework.util.MimeTypeUtils.APPLICATION_JSON_VALUE;
 
 @Component
-
 public class JwtRequestFilter extends OncePerRequestFilter {
 
     private final JwtTokenUtil jwtTokenUtil;
     private final JwtUserDetailsServiceImpl jwtUserDetailsService;
 
-    public JwtRequestFilter(JwtTokenUtil jwtTokenUtil, JwtUserDetailsServiceImpl jwtUserDetailsService) {
+    public JwtRequestFilter(JwtTokenUtil jwtTokenUtil,
+                            JwtUserDetailsServiceImpl jwtUserDetailsService) {
         this.jwtTokenUtil = jwtTokenUtil;
         this.jwtUserDetailsService = jwtUserDetailsService;
     }
@@ -37,17 +37,21 @@ public class JwtRequestFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
-                                    FilterChain filterChain) throws ServletException, IOException {
+                                    FilterChain filterChain)
+            throws ServletException, IOException {
 
-
-//  1. Skip some paths (login, register, etc.)
         String path = request.getServletPath();
-        if (path.startsWith("/auth") || path.equals("/login")) {
+
+        // ✅ 1. Skip public paths
+        if (path.startsWith("/auth")
+                || path.startsWith("/swagger-ui")
+                || path.startsWith("/v3/api-docs")) {
             filterChain.doFilter(request, response);
+            return;
         }
 
-//  2. Read Authentication Header
-    String header = request.getHeader("Authorization");
+        // ✅ 2. Read Authorization header
+        String header = request.getHeader("Authorization");
 
         if (header == null || !header.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
@@ -56,62 +60,48 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
         String token = header.substring(7);
         String username;
+
         try {
-            // 4️⃣ Extract username from token (subject field)
             username = jwtTokenUtil.getUsernameFromToken(token);
-        }
-        // Token is expired
-        catch (ExpiredJwtException e) {
+        } catch (ExpiredJwtException e) {
             sendError(response, HttpStatus.UNAUTHORIZED, "JWT token is expired");
             return;
-        }
-        // Token is the wrong format or invalid signature
-        catch (JwtException e) {
+        } catch (JwtException e) {
             sendError(response, HttpStatus.UNAUTHORIZED, "Invalid JWT token");
             return;
-        }
-        // Any unknown error
-        catch (Exception e) {
+        } catch (Exception e) {
             sendError(response, HttpStatus.UNAUTHORIZED, "Cannot parse JWT token");
             return;
         }
 
-// 5️⃣ Check if the user is NOT already authenticated in this request
-//        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-//
-//            // 6️⃣ Load user details from DB by username (email)
-//            // This returns user + roles from your database
-//            UserDetails userDetails = jwtUserDetailsService.loadUserByUsername(username);
-//
-//            // 7️⃣ Validate token with your JwtTokenUtil
-//            // Checks username match + expiration date
-//            if (jwtTokenUtil.validateToken(token, userDetails)) {
-//
-//                // 8️⃣ Create Authentication object (Spring Security way to store logged-in user)
-//                UsernamePasswordAuthenticationToken authToken =
-//                        new UsernamePasswordAuthenticationToken(
-//                                userDetails, // principal (who is logged in)
-//                                null,        // no password in token-based auth
-//                                userDetails.getAuthorities() // user roles/permissions
-//                        );
-//
-//                // Attach request details (IP, session, etc.)
-//                authToken.setDetails(
-//                        new WebAuthenticationDetailsSource().buildDetails(request)
-//                );
-//
-//                // 9️⃣ Store authentication into SecurityContext → user is now "logged in"
-//                SecurityContextHolder.getContext().setAuthentication(authToken);
-//            }
-//        }
+        // ✅ 3. Authenticate user if not already authenticated
+        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
 
-        // 🔟 Continue a filter chain (move to the next filter or controller)
+            UserDetails userDetails =
+                    jwtUserDetailsService.loadUserByUsername(username);
+
+            if (jwtTokenUtil.validateToken(token, userDetails)) {
+
+                UsernamePasswordAuthenticationToken authToken =
+                        new UsernamePasswordAuthenticationToken(
+                                userDetails,
+                                null,
+                                userDetails.getAuthorities()
+                        );
+
+                authToken.setDetails(
+                        new WebAuthenticationDetailsSource().buildDetails(request)
+                );
+
+                // 🔥 THIS IS THE KEY LINE
+                SecurityContextHolder.getContext().setAuthentication(authToken);
+            }
+        }
+
+        // ✅ 4. Continue filter chain
         filterChain.doFilter(request, response);
     }
 
-    /**
-     * Helper method to send a JSON error response.
-     */
     private void sendError(HttpServletResponse response,
                            HttpStatus status,
                            String message) throws IOException {
@@ -124,5 +114,4 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
         new ObjectMapper().writeValue(response.getOutputStream(), body);
     }
-
 }

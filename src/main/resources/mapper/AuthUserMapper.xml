@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.heang.drms_api.mapper.AuthUserMapper">
+
+    <resultMap id="AuthUserMap" type="com.heang.drms_api.model.AuthUser">
+        <id     property="id"        column="id"/>
+        <result property="email"     column="email"/>
+        <result property="password"  column="password"/>
+        <result property="fullName"  column="full_name"/>
+        <result property="phone"     column="phone"/>
+        <result property="role"      column="role"/>
+        <result property="status"    column="status"/>
+        <result property="createdAt" column="created_at"/>
+    </resultMap>
+
+    <select id="findByEmail" resultMap="AuthUserMap" parameterType="string">
+        SELECT
+            id,
+            email,
+            password,
+            full_name,
+            phone,
+            role,
+            status,
+            created_at
+        FROM auth_users
+        WHERE email = #{email}
+    </select>
+
+    <insert id="insertUser"
+            parameterType="com.heang.drms_api.model.AuthUser"
+            useGeneratedKeys="true"
+            keyProperty="id">
+        INSERT INTO auth_users (
+            email,
+            password,
+            full_name,
+            phone,
+            role,
+            status
+        )
+        VALUES (
+                   #{email},
+                   #{password},
+                   #{fullName},
+                   #{phone},
+                   #{role},
+                   #{status}
+               )
+    </insert>
+
+</mapper>
