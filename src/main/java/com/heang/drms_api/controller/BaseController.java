@@ -13,13 +13,12 @@ public abstract class BaseController {
 //    core builder (most flexible)
     protected  <T> ResponseEntity<ApiResponse<T>> apiResponseResponseEntity(
             HttpStatus httpStatus,
-            ExitCode exitCode,
             T data,
             HttpHeaders httpHeaders,
             Common common
     ){
         ApiResponse<T> body = new ApiResponse<>(
-                new ApiStatus(exitCode),
+                new ApiStatus(ExitCode.SUCCESS),
                 data,
                 common
         );
@@ -29,25 +28,25 @@ public abstract class BaseController {
 
 //    1), success with data only
     protected <T> ResponseEntity<ApiResponse<T>> ok(T data){
-        return apiResponseResponseEntity(HttpStatus.OK, ExitCode.SUCCESS, data, new HttpHeaders(), null);
+        return apiResponseResponseEntity(HttpStatus.OK, data, new HttpHeaders(), null);
     }
 
 
 //    2), success with data and common header info.
     protected <T> ResponseEntity<ApiResponse<T>> ok(T data, Common common){
-        return apiResponseResponseEntity(HttpStatus.OK, ExitCode.SUCCESS, data, new HttpHeaders(), common);
+        return apiResponseResponseEntity(HttpStatus.OK, data, new HttpHeaders(), common);
     }
 
 
 //    3), success, nobody
     protected ResponseEntity<ApiResponse<Void>> ok(){
-        return apiResponseResponseEntity(HttpStatus.OK, ExitCode.SUCCESS, null, new HttpHeaders(), null);
+        return apiResponseResponseEntity(HttpStatus.OK, null, new HttpHeaders(), null);
     }
 
 
 //    4), created
     protected <T> ResponseEntity<ApiResponse<T>> created(T data){
-        return apiResponseResponseEntity(HttpStatus.CREATED, ExitCode.SUCCESS, data, new HttpHeaders(), null);
+        return apiResponseResponseEntity(HttpStatus.CREATED, data, new HttpHeaders(), null);
     }
 
 }
