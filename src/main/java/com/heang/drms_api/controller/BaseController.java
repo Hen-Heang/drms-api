@@ -3,7 +3,7 @@ package com.heang.drms_api.controller;
 import com.heang.drms_api.common.api.ApiResponse;
 import com.heang.drms_api.common.api.ApiStatus;
 import com.heang.drms_api.common.api.Common;
-import com.heang.drms_api.common.api.ExitCode;
+import com.heang.drms_api.common.api.Code;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,7 +18,7 @@ public abstract class BaseController {
             Common common
     ){
         ApiResponse<T> body = new ApiResponse<>(
-                new ApiStatus(ExitCode.SUCCESS),
+                new ApiStatus(Code.SUCCESS),
                 data,
                 common
         );
@@ -44,9 +44,9 @@ public abstract class BaseController {
     }
 
 
-//    4), created
-    protected <T> ResponseEntity<ApiResponse<T>> created(T data){
-        return apiResponseResponseEntity(HttpStatus.CREATED, data, new HttpHeaders(), null);
+    protected <T> ResponseEntity<ApiResponse<T>> created(T data, Common common){
+        return apiResponseResponseEntity(HttpStatus.CREATED, data, new HttpHeaders(), common);
     }
+
 
 }

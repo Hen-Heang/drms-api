@@ -1,4 +1,4 @@
-package com.heang.drms_api.dto;
+package com.heang.drms_api.auth.dto;
 
 
 import jakarta.validation.constraints.Email;

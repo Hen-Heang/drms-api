@@ -1,7 +1,7 @@
-package com.heang.drms_api.config;
+package com.heang.drms_api.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.heang.drms_api.service.auth.JwtUserDetailsServiceImpl;
+import com.heang.drms_api.auth.service.JwtUserDetailsServiceImpl;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;

@@ -1,4 +1,4 @@
-package com.heang.drms_api.config;
+package com.heang.drms_api.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.heang.drms_api.common.api.ApiErrorResponse;

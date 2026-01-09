@@ -1,4 +1,4 @@
-package com.heang.drms_api.config;
+package com.heang.drms_api.security;
 
 
 import org.springframework.context.annotation.Bean;

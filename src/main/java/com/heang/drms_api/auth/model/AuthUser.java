@@ -1,4 +1,4 @@
-package com.heang.drms_api.model;
+package com.heang.drms_api.auth.model;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;

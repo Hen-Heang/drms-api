@@ -1,6 +1,6 @@
-package com.heang.drms_api.mapper;
+package com.heang.drms_api.auth.mapper;
 
-import com.heang.drms_api.model.AuthUser;
+import com.heang.drms_api.auth.model.AuthUser;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 

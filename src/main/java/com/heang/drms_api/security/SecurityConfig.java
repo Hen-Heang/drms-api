@@ -1,6 +1,6 @@
-package com.heang.drms_api.config;
+package com.heang.drms_api.security;
 
-import com.heang.drms_api.service.auth.JwtUserDetailsServiceImpl;
+import com.heang.drms_api.auth.service.JwtUserDetailsServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

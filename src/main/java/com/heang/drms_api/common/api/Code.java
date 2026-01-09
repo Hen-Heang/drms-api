@@ -3,7 +3,7 @@ package com.heang.drms_api.common.api;
 import lombok.Getter;
 
 @Getter
-public enum ExitCode {
+public enum Code {
     SUCCESS(200, "Success", 200),
 
     // Authentication Errors (1000-1099)
@@ -44,14 +44,14 @@ public enum ExitCode {
     private final String message;
     private final int httpCode;
 
-    ExitCode(int code, String message, int httpCode) {
+    Code(int code, String message, int httpCode) {
         this.code = code;
         this.message = message;
         this.httpCode = httpCode;
     }
 
-    public static ExitCode fromCode(int code) {
-        for (ExitCode exitCode : ExitCode.values()) {
+    public static Code fromCode(int code) {
+        for (Code exitCode : Code.values()) {
             if (exitCode.getCode() == code) {
                 return exitCode;
             }

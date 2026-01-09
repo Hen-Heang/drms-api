@@ -1,6 +1,6 @@
 package com.heang.drms_api.exception;
 import com.heang.drms_api.common.api.ApiResponse;
-import com.heang.drms_api.common.api.ExitCode;
+import com.heang.drms_api.common.api.Code;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -25,7 +25,7 @@ public class GlobalExceptionHandler {
             WebRequest request
     ) {
         ApiResponse<Object> body = ApiResponse.error(
-                ExitCode.SYSTEM_ERROR,   // later you can create specific code like NOT_FOUND
+                Code.SYSTEM_ERROR,   // later you can create specific code like NOT_FOUND
                 ex.getMessage()
         );
         return ResponseEntity
@@ -40,7 +40,7 @@ public class GlobalExceptionHandler {
             WebRequest request
     ) {
         ApiResponse<Object> body = ApiResponse.error(
-                ExitCode.REGISTRATION_FAILED,  // or create GENERIC_BAD_REQUEST
+                Code.REGISTRATION_FAILED,  // or create GENERIC_BAD_REQUEST
                 ex.getMessage()
         );
         return ResponseEntity
@@ -61,7 +61,7 @@ public class GlobalExceptionHandler {
         });
 
         ApiResponse<Object> body = ApiResponse.error(
-                ExitCode.REGISTRATION_FAILED,   // or create VALIDATION_ERROR code
+                Code.REGISTRATION_FAILED,   // or create VALIDATION_ERROR code
                 errors                          // 👉 return “field -> message” map
         );
 
@@ -77,7 +77,7 @@ public class GlobalExceptionHandler {
             WebRequest request
     ) {
         ApiResponse<Object> body = ApiResponse.error(
-                ExitCode.INVALID_CREDENTIALS,
+                Code.INVALID_CREDENTIALS,
                 ex.getMessage()
         );
 
@@ -93,7 +93,7 @@ public class GlobalExceptionHandler {
             WebRequest request
     ) {
         ApiResponse<Object> body = ApiResponse.error(
-                ExitCode.INSUFFICIENT_PERMISSIONS,
+                Code.INSUFFICIENT_PERMISSIONS,
                 ex.getMessage()
         );
 
@@ -125,7 +125,7 @@ public class GlobalExceptionHandler {
             WebRequest request
     ) {
         ApiResponse<Object> body = ApiResponse.error(
-                ExitCode.UNKNOWN_ERROR,
+                Code.UNKNOWN_ERROR,
                 ex.getMessage()
         );
 

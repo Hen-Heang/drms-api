@@ -3,9 +3,9 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="com.heang.drms_api.mapper.AuthUserMapper">
+<mapper namespace="com.heang.drms_api.auth.mapper.AuthUserMapper">
 
-    <resultMap id="AuthUserMap" type="com.heang.drms_api.model.AuthUser">
+    <resultMap id="AuthUserMap" type="com.heang.drms_api.auth.model.AuthUser">
         <id     property="id"        column="id"/>
         <result property="email"     column="email"/>
         <result property="password"  column="password"/>
@@ -31,7 +31,7 @@
     </select>
 
     <insert id="insertUser"
-            parameterType="com.heang.drms_api.model.AuthUser"
+            parameterType="com.heang.drms_api.auth.model.AuthUser"
             useGeneratedKeys="true"
             keyProperty="id">
         INSERT INTO auth_users (

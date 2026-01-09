@@ -1,6 +1,6 @@
 package com.heang.drms_api.exception;
 
-import com.heang.drms_api.common.api.ExitCode;
+import com.heang.drms_api.common.api.Code;
 import lombok.Getter;
 
 @Getter
@@ -8,29 +8,29 @@ import lombok.Getter;
 
 public class BusinessException extends RuntimeException{
     private Object body;
-    private final ExitCode errorCode;
+    private final Code errorCode;
 
-    public BusinessException(ExitCode errorCode, Object body) {
+    public BusinessException(Code errorCode, Object body) {
         super(errorCode.getMessage());
         this.errorCode = errorCode;
         this.body = body;
     }
 
-    public BusinessException(ExitCode errorCode, String message) {
+    public BusinessException(Code errorCode, String message) {
 
         super(message);
         this.errorCode = errorCode;
 
     }
 
-    public BusinessException(ExitCode errorCode) {
+    public BusinessException(Code errorCode) {
 
         super(errorCode.getMessage());
         this.errorCode = errorCode;
 
     }
 
-    public BusinessException(ExitCode errorCode, Throwable e) {
+    public BusinessException(Code errorCode, Throwable e) {
 
         this(errorCode);
 //        AppLogManager.error(e);
