@@ -12,4 +12,5 @@ public interface AuthUserMapper {
     int insertUser(AuthUser authUser);
 
 
+
 }

@@ -31,7 +31,7 @@ public class JwtAuthenticationController extends BaseController {
 
     private final JwtTokenUtil jwtTokenUtil;
     private final  JwtUserDetailsServiceImpl jwtUserDetailsService;
-    private final OtpService otpService;
+//    private final OtpService otpService;
 
 
     @PostMapping("/register")
