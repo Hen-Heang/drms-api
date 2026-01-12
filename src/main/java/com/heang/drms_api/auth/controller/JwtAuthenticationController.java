@@ -2,15 +2,8 @@ package com.heang.drms_api.auth.controller;
 
 import com.heang.drms_api.auth.dto.AppUserDto;
 import com.heang.drms_api.auth.dto.AppUserRequest;
-import com.heang.drms_api.auth.service.OtpService;
-import com.heang.drms_api.common.api.ApiResponse;
-import com.heang.drms_api.common.api.ApiStatus;
-import com.heang.drms_api.common.api.Code;
 import com.heang.drms_api.common.api.Common;
-import com.heang.drms_api.common.utils.DateTimeUtils;
 import com.heang.drms_api.controller.BaseController;
-import com.heang.drms_api.auth.dto.RegisterRequest;
-import com.heang.drms_api.auth.dto.RegisterResponse;
 import com.heang.drms_api.auth.service.JwtUserDetailsServiceImpl;
 import com.heang.drms_api.security.JwtTokenUtil;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -18,7 +11,6 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.Map;
 
 @RestController

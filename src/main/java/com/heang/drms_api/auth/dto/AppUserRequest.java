@@ -16,7 +16,7 @@ public class AppUserRequest {
 
     private String email;
     private String password;
-    private UserRole role;
+    private Integer roleId;
 
 
 }

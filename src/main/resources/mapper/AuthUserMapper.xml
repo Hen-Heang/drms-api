@@ -2,54 +2,88 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-
 <mapper namespace="com.heang.drms_api.auth.mapper.AuthUserMapper">
 
-    <resultMap id="AuthUserMap" type="com.heang.drms_api.auth.model.AuthUser">
+    <resultMap id="AuthUserMap" type="com.heang.drms_api.auth.model.AppUser">
         <id     property="id"        column="id"/>
         <result property="email"     column="email"/>
         <result property="password"  column="password"/>
-        <result property="fullName"  column="full_name"/>
-        <result property="phone"     column="phone"/>
         <result property="role"      column="role"/>
-        <result property="status"    column="status"/>
-        <result property="createdAt" column="created_at"/>
+        <result property="roleId"    column="role_id"/>
+        <result property="isVerified"  column="is_verified"/>
+        <result property="isActive"    column="is_active"/>
     </resultMap>
 
-    <select id="findByEmail" resultMap="AuthUserMap" parameterType="string">
-        SELECT
-            id,
-            email,
-            password,
-            full_name,
-            phone,
-            role,
-            status,
-            created_at
-        FROM auth_users
-        WHERE email = #{email}
+    <sql id="AccountReturningColumns">
+        id,
+        email,
+        password,
+        role_id,
+        is_verified,
+        is_active
+    </sql>
+
+    <select id="insertPartnerUser" parameterType="map" resultMap="AuthUserMap">
+        INSERT INTO tb_partner_account (role_id, email, password)
+        VALUES (#{user.roleId}, #{user.email}, #{user.password})
+        RETURNING
+        id,
+        email,
+        password,
+        role_id,
+        is_verified,
+        is_active
     </select>
 
-    <insert id="insertUser"
-            parameterType="com.heang.drms_api.auth.model.AuthUser"
-            useGeneratedKeys="true"
-            keyProperty="id">
-        INSERT INTO auth_users (
-            email,
-            password,
-            full_name,
-            phone,
-            role,
-            status
-        )
-        VALUES (
-                   #{email},
-                   #{password},
-                   #{fullName},
-                   #{phone},
-                   #{role},
-                   #{status}
-               )
-    </insert>
+    <select id="insertMerchantUser" parameterType="map" resultMap="AuthUserMap">
+        INSERT INTO tb_merchant_account (role_id, email, password)
+        VALUES (#{user.roleId}, #{user.email}, #{user.password})
+        RETURNING
+        id,
+        email,
+        password,
+        role_id,
+        is_verified,
+        is_active
+    </select>
+
+
+
+    <select id="findPartnerByEmail" parameterType="string" resultType="com.heang.drms_api.auth.model.AppUser">
+        SELECT
+        ta.id AS id,
+        ta.email AS email,
+        ta.password AS password,
+        tr.name AS role,
+        ta.role_id AS role_id,
+        ta.is_verified AS is_verified,
+        ta.is_active AS is_active
+        FROM tb_partner_account ta
+        JOIN tb_role tr ON ta.role_id = tr.id
+        WHERE ta.email = #{email}
+    </select>
+
+    <select id="findMerchantByEmail" parameterType="string" resultType="com.heang.drms_api.auth.model.AppUser">
+        SELECT
+        ta.id AS id,
+        ta.email AS email,
+        ta.password AS password,
+        tr.name AS role,
+        ta.role_id AS role_id,
+        ta.is_verified AS is_verified,
+        ta.is_active AS is_active
+        FROM tb_merchant_account ta
+        JOIN tb_role tr ON ta.role_id = tr.id
+        WHERE ta.email = #{email}
+    </select>
+
+    <select id="existsPartnerEmail" parameterType="string" resultType="boolean">
+        SELECT EXISTS (SELECT 1 FROM tb_partner_account WHERE email = #{email})
+    </select>
+
+    <select id="existsMerchantEmail" parameterType="string" resultType="boolean">
+        SELECT EXISTS (SELECT 1 FROM tb_merchant_account WHERE email = #{email})
+    </select>
+
 
 </mapper>
