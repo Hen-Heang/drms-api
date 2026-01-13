@@ -1,0 +1,30 @@
+package com.heang.drms_api.auth.controller;
+
+
+import com.heang.drms_api.auth.service.OtpService;
+import com.heang.drms_api.common.api.ApiResponse;
+import com.heang.drms_api.controller.BaseController;
+import lombok.RequiredArgsConstructor;
+import org.apache.ibatis.annotations.Param;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import static org.springframework.web.servlet.function.ServerResponse.status;
+
+@RestController
+@RequestMapping("/api/otp")
+@RequiredArgsConstructor
+public class OTPController extends BaseController {
+
+    private final OtpService otpService;
+    @PostMapping("/generate")
+    public ResponseEntity<?> generateOtp(@RequestParam String email) {
+        String otp = otpService.generateOtp(email);
+        // Implement OTP generation logic here
+        return ok(otp);
+
+    }
+}
