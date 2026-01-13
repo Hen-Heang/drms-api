@@ -8,6 +8,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.jspecify.annotations.NonNull;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -36,8 +37,8 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain filterChain)
+                                    @NonNull HttpServletResponse response,
+                                    @NonNull FilterChain filterChain)
             throws ServletException, IOException {
 
         String path = request.getServletPath();
@@ -64,13 +65,13 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         try {
             username = jwtTokenUtil.getUsernameFromToken(token);
         } catch (ExpiredJwtException e) {
-            sendError(response, HttpStatus.UNAUTHORIZED, "JWT token is expired");
+            sendError(response, "JWT token is expired");
             return;
         } catch (JwtException e) {
-            sendError(response, HttpStatus.UNAUTHORIZED, "Invalid JWT token");
+            sendError(response, "Invalid JWT token");
             return;
         } catch (Exception e) {
-            sendError(response, HttpStatus.UNAUTHORIZED, "Cannot parse JWT token");
+            sendError(response, "Cannot parse JWT token");
             return;
         }
 
@@ -103,10 +104,9 @@ public class JwtRequestFilter extends OncePerRequestFilter {
     }
 
     private void sendError(HttpServletResponse response,
-                           HttpStatus status,
                            String message) throws IOException {
 
-        response.setStatus(status.value());
+        response.setStatus(HttpStatus.UNAUTHORIZED.value());
         response.setContentType(APPLICATION_JSON_VALUE);
 
         Map<String, String> body = new HashMap<>();

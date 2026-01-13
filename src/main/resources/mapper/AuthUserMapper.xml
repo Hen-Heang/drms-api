@@ -48,7 +48,7 @@
     </select>
 
 
-
+    <!--    Find By Email -->
     <select id="findPartnerByEmail" parameterType="string" resultType="com.heang.drms_api.auth.model.AppUser">
         SELECT
         ta.id AS id,
@@ -62,7 +62,6 @@
         JOIN tb_role tr ON ta.role_id = tr.id
         WHERE ta.email = #{email}
     </select>
-
     <select id="findMerchantByEmail" parameterType="string" resultType="com.heang.drms_api.auth.model.AppUser">
         SELECT
         ta.id AS id,
@@ -77,13 +76,34 @@
         WHERE ta.email = #{email}
     </select>
 
+
+    <!--    Check Exist Email -->
     <select id="existsPartnerEmail" parameterType="string" resultType="boolean">
         SELECT EXISTS (SELECT 1 FROM tb_partner_account WHERE email = #{email})
     </select>
-
     <select id="existsMerchantEmail" parameterType="string" resultType="boolean">
         SELECT EXISTS (SELECT 1 FROM tb_merchant_account WHERE email = #{email})
     </select>
+
+
+    <!--    Get RoleId By Email-->
+    <select id="getPartnerRoleIdByEmail" parameterType="string" resultType="int">
+        SELECT role_id FROM  tb_partner_account WHERE email = #{email}
+    </select>
+    <select id="getMerchantRoleIdByEmail" parameterType="string" resultType="int">
+        SELECT role_id FROM  tb_merchant_account WHERE email = #{email}
+    </select>
+
+
+   <!--  Get UserId By Email  -->
+    <select id="getPartnerUserIdByEmail" parameterType="string" resultType="int">
+        SELECT id FROM  tb_partner_account WHERE email = #{email}
+    </select>
+    <select id="getMerchantUserIdByEmail" parameterType="string" resultType="int">
+        SELECT id FROM  tb_merchant_account WHERE email = #{email}
+    </select>
+
+
 
 
 </mapper>

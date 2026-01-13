@@ -19,6 +19,11 @@ public interface AuthUserMapper {
     Boolean partnerEmailExists(@Param("email") String email);
     Boolean merchantEmailExists(@Param("email") String email);
 
+    Integer getPartnerRoleIdByEmail(@Param("email") String email);
+    Integer getMerchantRoleIdByEmail(@Param("email") String email);
+
+    Integer getUserIdByPartnerEmail(@Param("email") String email);
+    Integer getUserIdByMerchantEmail(@Param("email") String email);
 
 
 

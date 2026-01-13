@@ -8,14 +8,13 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@NoArgsConstructor
 @AllArgsConstructor
+@NoArgsConstructor
 
-public class AppUserRequest {
+public class LoginResponse {
 
-    private String email;
-    private String password;
+    private String token;
+    private Integer userId;
     private Integer roleId;
-
 
 }

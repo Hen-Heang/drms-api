@@ -6,6 +6,8 @@ import com.heang.drms_api.auth.dto.AppUserRequest;
 import com.heang.drms_api.auth.mapper.AppUserStructMapper;
 import com.heang.drms_api.auth.mapper.AuthUserMapper;
 import com.heang.drms_api.auth.model.AppUser;
+import com.heang.drms_api.common.api.Code;
+import com.heang.drms_api.common.utils.EmailValidatorUtils;
 import com.heang.drms_api.exception.BadRequestException;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NonNull;
@@ -15,25 +17,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 @Service
 @RequiredArgsConstructor
 public class JwtUserDetailsServiceImpl implements UserDetailsService, AuthService {
 
     private final AuthUserMapper authUserMapper;
+    private final AppUserStructMapper appUserStructMapper;
+    private final PasswordEncoder passwordEncoder;
 
-     private final AppUserStructMapper appUserStructMapper;
-    private final  PasswordEncoder passwordEncoder;
-    private static final String EMAIL_PATTERN =
-            "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,6}$";
-    private final Pattern pattern = Pattern.compile(EMAIL_PATTERN);
-
-    public boolean validateEmail(final String email) {
-        Matcher matcher = pattern.matcher(email);
-        return matcher.matches();
-    }
 
     @Override
     public UserDetails loadUserByUsername(@NonNull String username) throws UsernameNotFoundException {
@@ -51,32 +42,31 @@ public class JwtUserDetailsServiceImpl implements UserDetailsService, AuthServic
     public AppUserDto insertUser(AppUserRequest appUserRequest) {
         //        check roleId
         if ((!appUserRequest.getRoleId().equals(1) && !appUserRequest.getRoleId().equals(2))) {
-            throw new IllegalArgumentException("Invalid roleId.");
+            throw new IllegalArgumentException(Code.INVALID_ROLE_ID.getMessage());
         }
 
         // check can't be null or blank email
         if (appUserRequest.getEmail() == null || appUserRequest.getEmail().isBlank()) {
-            throw new IllegalArgumentException("Email can not be null");
+            throw new IllegalArgumentException(Code.EMAIL_CANNOT_BE_NULL.getMessage());
         }
-
-        if (validateEmail(appUserRequest.getEmail())) {
-            throw new IllegalArgumentException("Please follow email format.");
-        }
-        if (validateEmail(appUserRequest.getEmail())) {
-            throw new BadRequestException("Please follow email format.");
+//        if (EmailValidatorUtils.isValid(appUserRequest.getEmail())) {
+//            throw new IllegalArgumentException(Code.INVALID_EMAIL_FORMAT.getMessage());
+//        }
+        if (!EmailValidatorUtils.isValid(appUserRequest.getEmail())) {
+            throw new BadRequestException(Code.INVALID_EMAIL_FORMAT.getMessage());
         }
         if (appUserRequest.getPassword() == null || appUserRequest.getPassword().isBlank()) {
-            throw new BadRequestException("Password can not be null");
+            throw new BadRequestException(Code.PASSWORD_CANNOT_BE_NULL.getMessage());
         }
         if ("string".equals(appUserRequest.getPassword())) {
-            throw new BadRequestException("Invalid password");
+            throw new BadRequestException(Code.INVALID_PASSWORD.getMessage());
         }
 
         //  check duplicate email in both tables
-        AppUser dupPartner  = authUserMapper.findPartnerByEmail(appUserRequest.getEmail());
+        AppUser dupPartner = authUserMapper.findPartnerByEmail(appUserRequest.getEmail());
         AppUser dupMerchant = authUserMapper.findMerchantByEmail(appUserRequest.getEmail());
         if (dupPartner != null || dupMerchant != null) {
-            throw new BadRequestException("This email is already taken");
+            throw new BadRequestException(Code.EMAIL_ALREADY_EXISTS.getMessage());
         }
         appUserRequest.setPassword(passwordEncoder.encode(appUserRequest.getPassword()));
 
@@ -88,4 +78,27 @@ public class JwtUserDetailsServiceImpl implements UserDetailsService, AuthServic
         }
         return appUserStructMapper.toDto(saved);
     }
+
+    // Get RoleId by email
+    public Integer getRoleIdByEmail(String email) {
+        Integer roleId = authUserMapper.getPartnerRoleIdByEmail(email);
+        if (roleId == null) {
+            roleId = authUserMapper.getMerchantRoleIdByEmail(email);
+        }
+        return roleId;
+
+    }
+
+   // Find User I'd By Email
+    public Integer findUserIdByEmail(String email) {
+        AppUser user = authUserMapper.findPartnerByEmail(email);
+        if (user == null) {
+            user = authUserMapper.findMerchantByEmail(email);
+        }
+        if (user == null) {
+            throw new BadRequestException("User not found with email: " + email);
+        }
+        return user.getId();
+    }
+
 }

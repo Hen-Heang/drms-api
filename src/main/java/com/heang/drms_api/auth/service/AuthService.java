@@ -2,11 +2,7 @@ package com.heang.drms_api.auth.service;
 
 import com.heang.drms_api.auth.dto.AppUserDto;
 import com.heang.drms_api.auth.dto.AppUserRequest;
-import com.heang.drms_api.auth.dto.RegisterRequest;
-import com.heang.drms_api.auth.dto.RegisterResponse;
 import jakarta.validation.Valid;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 @Service

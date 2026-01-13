@@ -20,6 +20,14 @@ public enum Code {
     EMAIL_ALREADY_EXISTS(1101, "Email already exists", 409),
     USERNAME_ALREADY_EXISTS(1102, "Username already exists", 409),
     PASSWORD_TOO_WEAK(1103, "Password does not meet strength requirements", 400),
+    EMAIL_CANNOT_BE_NULL(1104, "Email cannot be null or blank", 400),
+    INVALID_EMAIL_FORMAT(1105, "Invalid email format", 400),
+    PASSWORD_CANNOT_BE_NULL(1106, "Password cannot be null or blank", 400),
+    INVALID_PASSWORD(1107, "Invalid password", 400),
+
+
+    // Validation Errors (1400-1499)
+    INVALID_ROLE_ID(1400, "Invalid roleId", 400),
 
     // Password Reset Errors (1200-1299)
     PASSWORD_RESET_FAILED(1200, "Password reset failed", 400),

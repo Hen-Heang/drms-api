@@ -55,7 +55,7 @@ public class JwtTokenUtil {
                 .subject(userDetails.getUsername())
                 .issuedAt(now)
                 .expiration(expiry)
-                .signWith(signingKey(), Jwts.SIG.HS512)
+                .signWith(signingKey(), Jwts.SIG.HS256)
                 .compact();
     }
 
