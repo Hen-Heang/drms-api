@@ -1,24 +1,15 @@
 package com.heang.drms_api.common.api;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 @Getter
-@Setter
-@NoArgsConstructor
-
+@AllArgsConstructor
 public class ApiStatus {
-    private int code;
-    private String message;
-
-    public ApiStatus(int code, String message) {
-        this.code = code;
-        this.message = message;
-    }
+    private final int code;
+    private final String message;
 
     public ApiStatus(Code statusCode) {
-        this.code = statusCode.getCode();
-        this.message = statusCode.getMessage();
+        this(statusCode.getCode(), statusCode.getMessage());
     }
 }

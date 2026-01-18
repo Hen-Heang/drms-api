@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.heang.drms_api.otp.mapper.OtpUserMapper">
+
+    <select id="getPartnerByEmail" parameterType="string" resultType="com.heang.drms_api.otp.model.AppUser">
+        SELECT
+            ta.id       as id,
+            email,
+            password,
+            tr.name     as role,
+            role_id     as roleId,
+            is_verified as isVerified,
+            is_active as isActive
+        FROM tb_partner_account ta
+        JOIN tb_role tr ON ta.role_id = tr.id
+        WHERE ta.email = #{email}
+    </select>
+
+    <select id="getMerchantByEmail" parameterType="string" resultType="com.heang.drms_api.otp.model.AppUser">
+        SELECT
+        ta.id       as id,
+        email,
+        password,
+        tr.name     as role,
+        role_id     as roleId,
+        is_verified as isVerified,
+        is_active as isActive
+        FROM tb_merchant_account ta
+        JOIN tb_role tr ON ta.role_id = tr.id
+        WHERE ta.email = #{email}
+    </select>
+
+    <insert id="generateOtpPartner" parameterType="com.heang.drms_api.auth.model.Otp" useGeneratedKeys="true" keyProperty="id">
+                INSERT INTO tb_partner_otp
+                values (default,
+                #{currentUserId},
+                #{otpNumber},
+                #{email},
+                #{time})
+                returning *;
+    </insert>
+    <insert id="generateOtpMerchant" parameterType="com.heang.drms_api.auth.model.Otp" useGeneratedKeys="true" keyProperty="id">
+                INSERT INTO tb_merchant_otp
+                values (default,
+                #{currentUserId},
+                #{otpNumber},
+                #{email},
+                #{time})
+                returning *;
+    </insert>
+
+
+</mapper>

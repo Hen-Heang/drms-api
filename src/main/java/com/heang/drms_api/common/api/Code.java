@@ -24,6 +24,7 @@ public enum Code {
     INVALID_EMAIL_FORMAT(1105, "Invalid email format", 400),
     PASSWORD_CANNOT_BE_NULL(1106, "Password cannot be null or blank", 400),
     INVALID_PASSWORD(1107, "Invalid password", 400),
+    EMAIL_NOT_FOUND(1108, "Email not found", 404),
 
 
     // Validation Errors (1400-1499)
