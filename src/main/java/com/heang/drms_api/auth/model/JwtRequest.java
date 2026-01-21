@@ -2,7 +2,6 @@ package com.heang.drms_api.auth.model;
 
 import lombok.Getter;
 import lombok.Setter;
-
 import java.io.Serial;
 import java.io.Serializable;
 

@@ -2,7 +2,6 @@ package com.heang.drms_api.auth.mapper;
 
 import com.heang.drms_api.auth.dto.AppUserRequest;
 import com.heang.drms_api.auth.model.AppUser;
-import com.heang.drms_api.auth.model.AuthUser;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 

@@ -2,9 +2,9 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.heang.drms_api.otp.mapper.OtpUserMapper">
+<mapper namespace="com.heang.drms_api.auth.mapper.OtpMapper">
 
-    <select id="getPartnerByEmail" parameterType="string" resultType="com.heang.drms_api.otp.model.AppUser">
+    <select id="getPartnerByEmail" parameterType="string" resultType="com.heang.drms_api.auth.model.AppUser">
         SELECT
             ta.id       as id,
             email,
@@ -18,7 +18,7 @@
         WHERE ta.email = #{email}
     </select>
 
-    <select id="getMerchantByEmail" parameterType="string" resultType="com.heang.drms_api.otp.model.AppUser">
+    <select id="getMerchantByEmail" parameterType="string" resultType="com.heang.drms_api.auth.model.AppUser">
         SELECT
         ta.id       as id,
         email,

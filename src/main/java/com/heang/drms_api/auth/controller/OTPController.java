@@ -22,4 +22,9 @@ public class OTPController extends BaseController {
         return ok(otp);
 
     }
+    @PostMapping("/verify")
+    public ResponseEntity<?> verifyOtp(@RequestParam Integer otp, @RequestParam String email){
+        String result = otpService.verifyOtp(otp, email);
+        return ok(result);
+    }
 }

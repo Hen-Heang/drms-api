@@ -4,6 +4,7 @@ package com.heang.drms_api.auth.service;
 import com.heang.drms_api.auth.mapper.AuthUserMapper;
 import com.heang.drms_api.auth.mapper.OtpMapper;
 import com.heang.drms_api.auth.model.AppUser;
+import com.heang.drms_api.auth.model.Otp;
 import com.heang.drms_api.common.api.Code;
 import com.heang.drms_api.exception.BadRequestException;
 import lombok.RequiredArgsConstructor;
@@ -44,7 +45,7 @@ public class OtpServiceImpl implements OtpService {
 
 //        Randomly generate OTP code
         Random rand = new Random();
-        Integer otpNumber = rand.nextInt(9000) + 1000;
+        int otpNumber = rand.nextInt(9000) + 1000;
 
 //        Find user by email does it exist or not
         AppUser appUser = getPartnerByEmail(email);
@@ -55,16 +56,28 @@ public class OtpServiceImpl implements OtpService {
             throw new BadRequestException(Code.EMAIL_NOT_FOUND.getMessage());
         }
 
+        Integer userId = appUser.getId();
+//        Get current time
+        long currentTimeMillis = System.currentTimeMillis();
+        Otp otp;
 
+//        Process Of Email
+        emailService.sendOtpEmail(email, "Your OTP Code", "Your OTP code is: " + otpNumber + ". It will expire in 3 minutes.");
+        java.sql.Timestamp timestamp = new java.sql.Timestamp(currentTimeMillis);
+        if (appUser.getRoleId() == 1){
+            otp = otpMapper.generateOtpPartner(userId, otpNumber, email, timestamp);
+        } else {
+            otp = otpMapper.generateOtpMerchant(userId, otpNumber, email, timestamp);
+        }
+        if (otp == null) {
+            throw new BadRequestException("Failed to generate OTP code.");
+        }
 
+        return "We've already sent you the code to " + email;
+    }
 
-
-
-
-
-
-
-
+    @Override
+    public String verifyOtp(Integer otp, String email) {
         return "";
     }
 }

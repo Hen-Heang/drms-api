@@ -28,11 +28,14 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
     private final JwtTokenUtil jwtTokenUtil;
     private final JwtUserDetailsServiceImpl jwtUserDetailsService;
+    private final ObjectMapper objectMapper;
 
     public JwtRequestFilter(JwtTokenUtil jwtTokenUtil,
-                            JwtUserDetailsServiceImpl jwtUserDetailsService) {
+                            JwtUserDetailsServiceImpl jwtUserDetailsService,
+                            ObjectMapper objectMapper) {
         this.jwtTokenUtil = jwtTokenUtil;
         this.jwtUserDetailsService = jwtUserDetailsService;
+        this.objectMapper = objectMapper;
     }
 
     @Override
@@ -112,6 +115,6 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         Map<String, String> body = new HashMap<>();
         body.put("error", message);
 
-        new ObjectMapper().writeValue(response.getOutputStream(), body);
+        objectMapper.writeValue(response.getOutputStream(), body);
     }
 }

@@ -2,7 +2,6 @@ package com.heang.drms_api.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.heang.drms_api.common.api.ApiErrorResponse;
-import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.jspecify.annotations.NonNull;
@@ -16,18 +15,25 @@ import java.io.IOException;
 
 @Component
 public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
+
+    private final ObjectMapper objectMapper;
+
+    public JwtAuthenticationEntryPoint(ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
+    }
+
     @Override
     public void commence(HttpServletRequest request,
                          HttpServletResponse response,
                          @NonNull AuthenticationException authException)
             throws IOException {
 
-//  set the response status code to 401 Unauthorized
-        response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized");
-// Return JSON instead of plain text
+        // set the response status code to 401 Unauthorized (do not call sendError)
+        response.setStatus(HttpStatus.UNAUTHORIZED.value());
+        // Return JSON instead of plain text
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
 
-//        Build custom error response
+        // Build custom error response
         ApiErrorResponse errorResponse = new ApiErrorResponse(
                 HttpStatus.UNAUTHORIZED.value(),
                 "Unauthorized",
@@ -35,8 +41,8 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
                 request.getRequestURI()
         );
 
-        // 4️⃣ Convert it to JSON and write output
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.writeValue(response.getOutputStream(), errorResponse);
+        // Convert it to JSON and write output using injected mapper
+        objectMapper.writeValue(response.getOutputStream(), errorResponse);
+        response.flushBuffer();
     }
 }
