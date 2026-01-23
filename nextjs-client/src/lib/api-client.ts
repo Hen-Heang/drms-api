@@ -6,7 +6,8 @@ import {
   OtpGenerateRequest, 
   OtpVerifyRequest,
   OtpResponse,
-  ApiResponse 
+  ApiResponse,
+  User 
 } from '@/types/api';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
@@ -72,13 +73,13 @@ class ApiClient {
   }
 
   // User management
-  setUser(user: any): void {
+  setUser(user: User): void {
     if (typeof window !== 'undefined') {
       localStorage.setItem('user', JSON.stringify(user));
     }
   }
 
-  getUser(): any | null {
+  getUser(): User | null {
     if (typeof window !== 'undefined') {
       const user = localStorage.getItem('user');
       return user ? JSON.parse(user) : null;
