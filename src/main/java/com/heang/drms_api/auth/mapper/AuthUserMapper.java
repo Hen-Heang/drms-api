@@ -24,6 +24,8 @@ public interface AuthUserMapper {
     Integer getUserIdByPartnerEmail(@Param("email") String email);
     Integer getUserIdByMerchantEmail(@Param("email") String email);
 
+    Boolean verifyMerchantEmail(@Param("email") String email);
+    Boolean verifyPartnerEmail(@Param("email") String email);
 
 
 

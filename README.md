@@ -9,7 +9,7 @@
 6) SecurityConfig  ← LAST
 
 [//]: # (Script for create table auth_user)
-```sql
+```sql  
 create table auth_users(
 id 	BIGSERIAL primary key,
 email Varchar(150) not null,

@@ -5,6 +5,7 @@ import com.heang.drms_api.auth.dto.AppUserDto;
 import com.heang.drms_api.auth.dto.AppUserRequest;
 import com.heang.drms_api.auth.mapper.AppUserStructMapper;
 import com.heang.drms_api.auth.mapper.AuthUserMapper;
+import com.heang.drms_api.auth.mapper.OtpMapper;
 import com.heang.drms_api.auth.model.AppUser;
 import com.heang.drms_api.common.api.Code;
 import com.heang.drms_api.common.utils.EmailValidatorUtils;
@@ -24,6 +25,7 @@ public class JwtUserDetailsServiceImpl implements UserDetailsService, AuthServic
     private final AuthUserMapper authUserMapper;
     private final AppUserStructMapper appUserStructMapper;
     private final PasswordEncoder passwordEncoder;
+    private final OtpMapper otpMapper;
 
 
     @Override
@@ -89,7 +91,7 @@ public class JwtUserDetailsServiceImpl implements UserDetailsService, AuthServic
 
     }
 
-   // Find User I'd By Email
+    // Find User I'd By Email
     public Integer findUserIdByEmail(String email) {
         AppUser user = authUserMapper.findPartnerByEmail(email);
         if (user == null) {
@@ -101,4 +103,15 @@ public class JwtUserDetailsServiceImpl implements UserDetailsService, AuthServic
         return user.getId();
     }
 
+
+    public boolean isEmailVerified(String email) {
+        Boolean isVerified = authUserMapper.verifyPartnerEmail(email);
+        if (isVerified == null) {
+            isVerified = authUserMapper.verifyMerchantEmail(email);
+        }
+        if (isVerified == null) {
+            throw new BadRequestException(Code.EMAIL_NOT_FOUND.getMessage());
+        }
+        return isVerified;
+    }
 }

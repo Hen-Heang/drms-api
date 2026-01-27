@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.heang.drms_api.partner.mapper.PartnerInfoMapper">
+
+    <insert id="insertPartnerInfo"
+            parameterType="com.heang.drms_api.partner.model.Partner"
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO tb_partner_info (
+        partner_account_id,
+        first_name,
+        last_name,
+        gender,
+        profile_image,
+        created_at,
+        updated_at
+        ) VALUES (
+        #{partnerAccountId},
+        #{firstName},
+        #{lastName},
+        #(gender),
+        #{profileImage},
+        NOW(),
+        NOW()
+        )Returning *;
+
+    </insert>
+
+
+</mapper>

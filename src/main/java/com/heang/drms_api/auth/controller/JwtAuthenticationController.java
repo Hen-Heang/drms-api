@@ -4,6 +4,7 @@ import com.heang.drms_api.auth.dto.AppUserDto;
 import com.heang.drms_api.auth.dto.AppUserRequest;
 import com.heang.drms_api.auth.dto.LoginResponse;
 import com.heang.drms_api.auth.model.JwtRequest;
+import com.heang.drms_api.auth.service.OtpService;
 import com.heang.drms_api.common.api.Code;
 import com.heang.drms_api.common.api.Common;
 import com.heang.drms_api.controller.BaseController;
@@ -30,7 +31,7 @@ public class JwtAuthenticationController extends BaseController {
 
     private final JwtTokenUtil jwtTokenUtil;
     private final  JwtUserDetailsServiceImpl jwtUserDetailsService;
-//    private final OtpService otpService;
+    private final OtpService otpService;
     private final AuthenticationManager authenticationManager;
 
     @PostMapping("/register")
@@ -46,7 +47,11 @@ public class JwtAuthenticationController extends BaseController {
     @PostMapping("/login")
     public  ResponseEntity<?> createAuthenticationToken(
             JwtRequest loginRequest) throws Exception {
-
+//    otp
+//    if(!(verifyEmail(loginRequest.getEmail()))){
+//        otpService.generateOtp(loginRequest.getEmail());
+//        return ok("Email not verified. OTP has been sent to your email.");
+//        }
 //        Apply authentication logic
         authenticate(loginRequest.getEmail(), loginRequest.getPassword());
 //       Generate JWT token upon successful authentication
@@ -56,6 +61,12 @@ public class JwtAuthenticationController extends BaseController {
         Integer roleId = jwtUserDetailsService.getRoleIdByEmail(loginRequest.getEmail());
         Integer userId = jwtUserDetailsService.findUserIdByEmail(loginRequest.getEmail());
         return ok(new LoginResponse(token, roleId, userId));
+
+    }
+
+//    verify email
+    private boolean verifyEmail(String email){
+        return jwtUserDetailsService.isEmailVerified(email);
 
     }
 
