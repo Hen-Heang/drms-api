@@ -1,55 +1,134 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
-        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
 <mapper namespace="com.heang.drms_api.auth.mapper.OtpMapper">
 
-    <select id="getPartnerByEmail" parameterType="string" resultType="com.heang.drms_api.auth.model.AppUser">
+    <!-- ======================
+         Result Maps
+    ======================= -->
+    <resultMap id="AppUserMap" type="com.heang.drms_api.auth.model.AppUser">
+        <id     property="id"         column="id"/>
+        <result property="email"      column="email"/>
+        <result property="password"   column="password"/>
+        <result property="role"       column="role"/>
+        <result property="roleId"     column="role_id"/>
+        <result property="isVerified" column="is_verified"/>
+        <result property="isActive"   column="is_active"/>
+    </resultMap>
+
+    <resultMap id="OtpMap" type="com.heang.drms_api.auth.model.Otp">
+        <id     property="id"          column="id"/>
+        <result property="otpCode"     column="otp_code"/>
+        <result property="email"       column="email"/>
+        <result property="createdDate" column="created_date"/>
+        <!-- if your Otp model has distributorAccountId / retailerAccountId, tell me and I’ll map it perfectly -->
+    </resultMap>
+
+    <!-- Activated check -->
+    <select id="checkIfActivatedByDistributorEmail" parameterType="string" resultMap="AppUserMap">
         SELECT
-            ta.id       as id,
-            email,
-            password,
-            tr.name     as role,
-            role_id     as roleId,
-            is_verified as isVerified,
-            is_active as isActive
-        FROM tb_partner_account ta
+        ta.id, ta.email, ta.password,
+        tr.name AS role,
+        ta.role_id, ta.is_verified, ta.is_active
+        FROM tb_distributor_account ta
+        JOIN tb_role tr ON ta.role_id = tr.id
+        WHERE ta.email = #{email}
+        AND ta.is_verified = TRUE
+    </select>
+
+    <select id="checkIfActivatedByRetailerEmail" parameterType="string" resultMap="AppUserMap">
+        SELECT
+        ta.id, ta.email, ta.password,
+        tr.name AS role,
+        ta.role_id, ta.is_verified, ta.is_active
+        FROM tb_retailer_account ta
+        JOIN tb_role tr ON ta.role_id = tr.id
+        WHERE ta.email = #{email}
+        AND ta.is_verified = TRUE
+    </select>
+
+    <!-- Insert OTP (RETURNING row => use <select>) -->
+    <select id="generateDistributorOtp" parameterType="map" resultMap="OtpMap">
+        INSERT INTO tb_distributor_otp
+        VALUES (DEFAULT, #{currentUserId}, #{otpNumber}, #{email}, #{time})
+        RETURNING
+        id,
+        otp_code,
+        distributor_email AS email,
+        created_date
+    </select>
+
+    <select id="generateRetailerOtp" parameterType="map" resultMap="OtpMap">
+        INSERT INTO tb_retailer_otp
+        VALUES (DEFAULT, #{currentUserId}, #{otpNumber}, #{email}, #{time})
+        RETURNING
+        id,
+        otp_code,
+        retailer_email AS email,
+        created_date
+    </select>
+
+    <!-- Get user -->
+    <select id="getUserDistributorByEmail" parameterType="string" resultMap="AppUserMap">
+        SELECT
+        ta.id, ta.email, ta.password,
+        tr.name AS role,
+        ta.role_id, ta.is_verified, ta.is_active
+        FROM tb_distributor_account ta
         JOIN tb_role tr ON ta.role_id = tr.id
         WHERE ta.email = #{email}
     </select>
 
-    <select id="getMerchantByEmail" parameterType="string" resultType="com.heang.drms_api.auth.model.AppUser">
+    <select id="getUserRetailerByEmail" parameterType="string" resultMap="AppUserMap">
         SELECT
-        ta.id       as id,
-        email,
-        password,
-        tr.name     as role,
-        role_id     as roleId,
-        is_verified as isVerified,
-        is_active as isActive
-        FROM tb_merchant_account ta
+        ta.id, ta.email, ta.password,
+        tr.name AS role,
+        ta.role_id, ta.is_verified, ta.is_active
+        FROM tb_retailer_account ta
         JOIN tb_role tr ON ta.role_id = tr.id
         WHERE ta.email = #{email}
     </select>
 
-    <insert id="generateOtpPartner" parameterType="com.heang.drms_api.auth.model.Otp" useGeneratedKeys="true" keyProperty="id">
-                INSERT INTO tb_partner_otp
-                values (default,
-                #{currentUserId},
-                #{otpNumber},
-                #{email},
-                #{time})
-                returning *;
-    </insert>
-    <insert id="generateOtpMerchant" parameterType="com.heang.drms_api.auth.model.Otp" useGeneratedKeys="true" keyProperty="id">
-                INSERT INTO tb_merchant_otp
-                values (default,
-                #{currentUserId},
-                #{otpNumber},
-                #{email},
-                #{time})
-                returning *;
-    </insert>
+    <!-- Get latest OTP -->
+    <select id="getDistributorOtpByEmail" parameterType="string" resultMap="OtpMap">
+        SELECT
+        id,
+        otp_code,
+        distributor_email AS email,
+        created_date
+        FROM tb_distributor_otp
+        WHERE distributor_email = #{email}
+        ORDER BY created_date DESC
+        LIMIT 1
+    </select>
 
+    <select id="getRetailerOtpByEmail" parameterType="string" resultMap="OtpMap">
+        SELECT
+        id,
+        otp_code,
+        retailer_email AS email,
+        created_date
+        FROM tb_retailer_otp
+        WHERE retailer_email = #{email}
+        ORDER BY created_date DESC
+        LIMIT 1
+    </select>
+
+    <!-- Verify email -->
+    <select id="verifyDistributor" parameterType="string" resultType="string">
+        UPDATE tb_distributor_account
+        SET is_verified = TRUE
+        WHERE email = #{email}
+        RETURNING '1'
+    </select>
+
+    <select id="verifyRetailer" parameterType="string" resultType="string">
+        UPDATE tb_retailer_account
+        SET is_verified = TRUE
+        WHERE email = #{email}
+        RETURNING '1'
+    </select>
 
 </mapper>

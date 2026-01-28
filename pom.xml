@@ -20,11 +20,10 @@
 
     <properties>
         <java.version>17</java.version>
-        <jjwt.version>0.12.5</jjwt.version>
+        <jjwt.version>0.11.5</jjwt.version>
         <mapstruct.version>1.6.0</mapstruct.version>
         <lombok.version>1.18.36</lombok.version>
     </properties>
-
     <dependencies>
         <!-- Web + Validation -->
         <dependency>
@@ -62,8 +61,13 @@
             <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
             <version>3.0.0</version>
         </dependency>
-
+        <dependency>
+            <groupId>org.modelmapper</groupId>
+            <artifactId>modelmapper</artifactId>
+            <version>3.1.1</version>
+        </dependency>
         <!-- JWT (modern JJWT) -->
+        <!-- JWT -->
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt-api</artifactId>
@@ -134,8 +138,8 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.11.0</version>
                 <configuration>
-                    <source>${java.version}</source>
-                    <target>${java.version}</target>
+                    <source>21</source>
+                    <target>21</target>
                     <annotationProcessorPaths>
                         <path>
                             <groupId>org.projectlombok</groupId>

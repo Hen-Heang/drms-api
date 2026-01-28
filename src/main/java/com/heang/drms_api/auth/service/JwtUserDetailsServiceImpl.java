@@ -3,115 +3,199 @@ package com.heang.drms_api.auth.service;
 
 import com.heang.drms_api.auth.dto.AppUserDto;
 import com.heang.drms_api.auth.dto.AppUserRequest;
-import com.heang.drms_api.auth.mapper.AppUserStructMapper;
 import com.heang.drms_api.auth.mapper.AuthUserMapper;
 import com.heang.drms_api.auth.mapper.OtpMapper;
 import com.heang.drms_api.auth.model.AppUser;
-import com.heang.drms_api.common.api.Code;
-import com.heang.drms_api.common.utils.EmailValidatorUtils;
+import com.heang.drms_api.auth.model.JwtChangePasswordRequest;
+import com.heang.drms_api.auth.model.Otp;
 import com.heang.drms_api.exception.BadRequestException;
 import lombok.RequiredArgsConstructor;
-import org.jspecify.annotations.NonNull;
+import org.apache.ibatis.javassist.NotFoundException;
+import org.jspecify.annotations.NullMarked;
+import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
-
+import java.util.Date;
+import java.util.Objects;
+import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+@NullMarked
 @Service
 @RequiredArgsConstructor
-public class JwtUserDetailsServiceImpl implements UserDetailsService, AuthService {
+public class JwtUserDetailsServiceImpl implements UserDetailsService, JwtUserDetailsService {
+
 
     private final AuthUserMapper authUserMapper;
-    private final AppUserStructMapper appUserStructMapper;
-    private final PasswordEncoder passwordEncoder;
     private final OtpMapper otpMapper;
 
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private ModelMapper modelMapper;
+
+
+
+    Boolean checkDuplicatePhone(String phone, Integer roleId){
+        boolean isExistInUserPhone = false;
+        boolean isExistInUserInfo = false;
+
+        if (roleId == 1) {
+            isExistInUserPhone = authUserMapper.checkPhoneNumberFromDistributorPhone(phone);
+            isExistInUserInfo = authUserMapper.checkPhoneNumberFromDistributorDetail(phone);
+        } else {
+            isExistInUserPhone = authUserMapper.checkPhoneNumberFromRetailerPhone(phone);
+            isExistInUserInfo = authUserMapper.checkPhoneNumberFromRetailerDetail(phone);
+        }
+        return isExistInUserPhone || isExistInUserInfo;
+    }
+
+    private static final String EMAIL_PATTERN = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,6}$";
+    private final Pattern pattern = Pattern.compile(EMAIL_PATTERN);
+
+    public boolean validateEmail(final String email) {
+        Matcher matcher = pattern.matcher(email);
+        return matcher.matches();
+    }
 
     @Override
-    public UserDetails loadUserByUsername(@NonNull String username) throws UsernameNotFoundException {
-        UserDetails userDetails = authUserMapper.findPartnerByEmail(username);
-        if (userDetails == null) {
-            userDetails = authUserMapper.findMerchantByEmail(username);
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+        UserDetails user = authUserMapper.findDistributorUserByEmail(email);
+        if (user == null){
+            user = authUserMapper.findRetailerUserByEmail(email);
         }
-        if (userDetails == null) {
-            throw new UsernameNotFoundException("User not found with email: " + username);
+        if (user == null){
+            throw new BadRequestException("Invalid email address. Please input valid email address.");
         }
-        return userDetails;
+        return user;
     }
 
     @Override
     public AppUserDto insertUser(AppUserRequest appUserRequest) {
-        //        check roleId
-        if ((!appUserRequest.getRoleId().equals(1) && !appUserRequest.getRoleId().equals(2))) {
-            throw new IllegalArgumentException(Code.INVALID_ROLE_ID.getMessage());
+        if (!(appUserRequest.getRoleId().equals(1)|| appUserRequest.getRoleId().equals(2))){
+            throw new BadRequestException("Invalid roleId.");
         }
-
-        // check can't be null or blank email
-        if (appUserRequest.getEmail() == null || appUserRequest.getEmail().isBlank()) {
-            throw new IllegalArgumentException(Code.EMAIL_CANNOT_BE_NULL.getMessage());
+        if (appUserRequest.getEmail().isBlank()){
+            throw new BadRequestException("Email can not be null");
         }
-//        if (EmailValidatorUtils.isValid(appUserRequest.getEmail())) {
-//            throw new IllegalArgumentException(Code.INVALID_EMAIL_FORMAT.getMessage());
-//        }
-        if (!EmailValidatorUtils.isValid(appUserRequest.getEmail())) {
-            throw new BadRequestException(Code.INVALID_EMAIL_FORMAT.getMessage());
+        if (!(validateEmail(appUserRequest.getEmail()))){
+            throw new BadRequestException("Please follow email format.");
         }
-        if (appUserRequest.getPassword() == null || appUserRequest.getPassword().isBlank()) {
-            throw new BadRequestException(Code.PASSWORD_CANNOT_BE_NULL.getMessage());
+        if (appUserRequest.getPassword().isBlank()){
+            throw new BadRequestException("Password can not be null");
         }
-        if ("string".equals(appUserRequest.getPassword())) {
-            throw new BadRequestException(Code.INVALID_PASSWORD.getMessage());
+        appUserRequest.setPassword(passwordEncoder.encode((appUserRequest.getPassword())));
+        AppUser appUser = null;
+        AppUser checkDuplicate = authUserMapper.findDistributorUserByEmail(appUserRequest.getEmail());
+        AppUser checkDuplicateRetailer = authUserMapper.findRetailerUserByEmail(appUserRequest.getEmail());
+        if (checkDuplicate != null || checkDuplicateRetailer != null){
+            throw new BadRequestException("Email is already in use.");
         }
-
-        //  check duplicate email in both tables
-        AppUser dupPartner = authUserMapper.findPartnerByEmail(appUserRequest.getEmail());
-        AppUser dupMerchant = authUserMapper.findMerchantByEmail(appUserRequest.getEmail());
-        if (dupPartner != null || dupMerchant != null) {
-            throw new BadRequestException(Code.EMAIL_ALREADY_EXISTS.getMessage());
-        }
-        appUserRequest.setPassword(passwordEncoder.encode(appUserRequest.getPassword()));
-
-        AppUser saved = null;
         if (appUserRequest.getRoleId() == 1) {
-            saved = authUserMapper.insertPartnerUser(appUserRequest);
-        } else if (appUserRequest.getRoleId() == 2) {
-            saved = authUserMapper.insertMerchantUser(appUserRequest);
+            if (appUserRequest.getPassword().equals("string") || appUserRequest.getPassword().isBlank()) {
+                throw new BadRequestException("Invalid password");
+            }
+            appUser = authUserMapper.insertDistributorUser(appUserRequest);
+        }else if (appUserRequest.getRoleId() == 2){
+
+            if (appUserRequest.getPassword().equals("string") || appUserRequest.getPassword().isBlank()) {
+                throw new BadRequestException("Invalid password");
+            }
+            appUser = authUserMapper.insertRetailerUser(appUserRequest);
         }
-        return appUserStructMapper.toDto(saved);
+        return modelMapper.map(appUser, AppUserDto.class);
     }
 
-    // Get RoleId by email
-    public Integer getRoleIdByEmail(String email) {
-        Integer roleId = authUserMapper.getPartnerRoleIdByEmail(email);
-        if (roleId == null) {
-            roleId = authUserMapper.getMerchantRoleIdByEmail(email);
-        }
-        return roleId;
-
+    @Override
+    public boolean getVerifyEmail(String email) {
+        return authUserMapper.getVerifyDistributorEmail(email);
     }
 
-    // Find User I'd By Email
-    public Integer findUserIdByEmail(String email) {
-        AppUser user = authUserMapper.findPartnerByEmail(email);
-        if (user == null) {
-            user = authUserMapper.findMerchantByEmail(email);
+    @Override
+    public AppUserDto changePassword(JwtChangePasswordRequest request) throws NotFoundException {
+        boolean isDistributor = true;
+        AppUser appUser = authUserMapper.findDistributorUserByEmail(request.getEmail());
+        if (appUser == null){
+            isDistributor = false;
+            appUser = authUserMapper.findRetailerUserByEmail(request.getEmail());
         }
-        if (user == null) {
-            throw new BadRequestException("User not found with email: " + email);
+        if (appUser == null){
+            throw new NotFoundException("Not found. Invalid email.");
         }
-        return user.getId();
+        // verify password with encrypted password
+        if (!(passwordEncoder.matches(request.getOldPassword(), appUser.getPassword()))){
+            throw new NotFoundException("Old password is incorrect. Please input correct password.");
+        }
+        // if match encrypt new password and update database password
+        request.setNewPassword(passwordEncoder.encode(request.getNewPassword()));
+        AppUser newAppUser = new AppUser();
+        if (isDistributor){
+            newAppUser = authUserMapper.updateDistributorUser(request);
+        } else {
+            newAppUser = authUserMapper.updateRetailerUser(request);
+        }
+        return modelMapper.map(newAppUser, AppUserDto.class);
+    }
+
+    @Override
+    public String forgetPassword(Integer otp, String email, String newPassword) throws NotFoundException {
+        // check if user is existing
+        boolean isDistributor = true;
+        Otp otpObj = null;
+        AppUser appUser = authUserMapper.findDistributorUserByEmail(email);
+        otpObj = otpMapper.getDistributorOtpByEmail(email);
+        if (appUser == null || otpObj == null){
+            isDistributor = false;
+            appUser = authUserMapper.findRetailerUserByEmail(email);
+            otpObj = otpMapper.getRetailerOtpByEmail(email);
+        }
+        if (appUser == null){
+            throw new NotFoundException("Not found. Invalid email.");
+        }
+        if (otpObj == null){
+            throw new BadRequestException("This OTP does not exist");
+        }
+        // check if request and database of OTP matches
+        if (!Objects.equals(appUser.getEmail(), otpObj.getEmail())) {
+            throw new BadRequestException("Email not match");
+        } else if (!Objects.equals(otpObj.getOtpCode(), otp)) {
+            throw new BadRequestException("OTP code not match");
+        }
+        // check timeout of 3 minutes
+        else if (!lessThan3MinutesCheck(otpObj.getCreatedDate())) {
+            throw new BadRequestException("OTP Expired");
+        }
+        // update new password
+        String updatedPassword = "null";
+        String encodedNewPassword = passwordEncoder.encode(newPassword);
+        if (isDistributor) {
+            updatedPassword = authUserMapper.updateForgetDistributorUser(email, encodedNewPassword);
+        } else {
+            updatedPassword = authUserMapper.updateForgetRetailerUser(email, encodedNewPassword);
+        }
+        if (Objects.equals(updatedPassword, "null")){
+            throw new BadRequestException("Failed to update new password");
+        }
+        return "New password updated. Your new password is: "+ newPassword;
     }
 
 
-    public boolean isEmailVerified(String email) {
-        Boolean isVerified = authUserMapper.verifyPartnerEmail(email);
-        if (isVerified == null) {
-            isVerified = authUserMapper.verifyMerchantEmail(email);
-        }
-        if (isVerified == null) {
-            throw new BadRequestException(Code.EMAIL_NOT_FOUND.getMessage());
-        }
-        return isVerified;
+    public Integer getRoleIdByMail(String email) {
+        return authUserMapper.getRoleIdByMail(email);
+    }
+    public Boolean lessThan3MinutesCheck(Date createdDate) {
+        Date currentDate = new Date();
+        long diffInMillis = Math.abs(currentDate.getTime() - createdDate.getTime());
+        long diffInMinutes = TimeUnit.MINUTES.convert(diffInMillis, TimeUnit.MILLISECONDS);
+        return diffInMinutes < 3;
+    }
+
+    public Integer getUserIdByMail(String email) {
+        return authUserMapper.getUserIdByMailDistributor(email);
     }
 }

@@ -2,32 +2,48 @@ package com.heang.drms_api.auth.mapper;
 
 import com.heang.drms_api.auth.dto.AppUserRequest;
 import com.heang.drms_api.auth.model.AppUser;
+import com.heang.drms_api.auth.model.JwtChangePasswordRequest;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 @Mapper
 public interface AuthUserMapper {
 
-    AppUser insertPartnerUser(@Param("user")AppUserRequest appUserRequest);
-    AppUser insertMerchantUser(@Param("user")AppUserRequest user);
+    AppUser insertDistributorUser(@Param("user") AppUserRequest user);
 
-    AppUser findPartnerByEmail(@Param("email") String email);
+    AppUser insertRetailerUser(@Param("user") AppUserRequest user);
 
-    AppUser findMerchantByEmail(@Param("email") String email);
+    AppUser findDistributorUserByEmail(@Param("email") String email);
 
-    Boolean partnerEmailExists(@Param("email") String email);
-    Boolean merchantEmailExists(@Param("email") String email);
+    AppUser findDistributorUserById(@Param("id") int id);
 
-    Integer getPartnerRoleIdByEmail(@Param("email") String email);
-    Integer getMerchantRoleIdByEmail(@Param("email") String email);
+    AppUser findRetailerUserByEmail(@Param("email") String email);
 
-    Integer getUserIdByPartnerEmail(@Param("email") String email);
-    Integer getUserIdByMerchantEmail(@Param("email") String email);
+    boolean checkPhoneNumberFromDistributorPhone(@Param("phone") String phone);
 
-    Boolean verifyMerchantEmail(@Param("email") String email);
-    Boolean verifyPartnerEmail(@Param("email") String email);
+    boolean checkPhoneNumberFromDistributorDetail(@Param("phone") String phone);
 
+    boolean checkPhoneNumberFromRetailerPhone(@Param("phone") String phone);
 
+    boolean checkPhoneNumberFromRetailerDetail(@Param("phone") String phone);
 
+    int getRoleIdByMail(@Param("email") String email);
 
+    int getRoleIdByMailRetailer(@Param("email") String email);
+
+    boolean getVerifyDistributorEmail(@Param("email") String email);
+
+    boolean getVerifyRetailerEmail(@Param("email") String email);
+
+    AppUser updateDistributorUser(@Param("req") JwtChangePasswordRequest req);
+
+    AppUser updateRetailerUser(@Param("req") JwtChangePasswordRequest req);
+
+    String updateForgetDistributorUser(@Param("email") String email, @Param("newPassword") String newPassword);
+
+    String updateForgetRetailerUser(@Param("email") String email, @Param("newPassword") String newPassword);
+
+    int getUserIdByMailDistributor(@Param("email") String email);
+
+    int getUserIdByMailRetailer(@Param("email") String email);
 }

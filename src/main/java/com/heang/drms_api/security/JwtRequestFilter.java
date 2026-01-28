@@ -1,15 +1,12 @@
 package com.heang.drms_api.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import com.heang.drms_api.auth.service.JwtUserDetailsServiceImpl;
-import io.jsonwebtoken.ExpiredJwtException;
-import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.jspecify.annotations.NonNull;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -21,100 +18,80 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.springframework.util.MimeTypeUtils.APPLICATION_JSON_VALUE;
+import static org.springframework.http.HttpStatus.FORBIDDEN;
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @Component
 public class JwtRequestFilter extends OncePerRequestFilter {
 
-    private final JwtTokenUtil jwtTokenUtil;
     private final JwtUserDetailsServiceImpl jwtUserDetailsService;
-    private final ObjectMapper objectMapper;
 
-    public JwtRequestFilter(JwtTokenUtil jwtTokenUtil,
-                            JwtUserDetailsServiceImpl jwtUserDetailsService,
-                            ObjectMapper objectMapper) {
-        this.jwtTokenUtil = jwtTokenUtil;
+    private final JwtTokenUtil jwtTokenUtil;
+
+    public JwtRequestFilter(JwtUserDetailsServiceImpl jwtUserDetailsService, JwtTokenUtil jwtTokenUtil) {
         this.jwtUserDetailsService = jwtUserDetailsService;
-        this.objectMapper = objectMapper;
+        this.jwtTokenUtil = jwtTokenUtil;
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request,
-                                    @NonNull HttpServletResponse response,
-                                    @NonNull FilterChain filterChain)
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {
+//        if (request.getServletPath().equals("/authorization/**")){
+//            chain.doFilter(request, response);
+//        }
+        final String requestTokenHeader = request.getHeader("Authorization");
 
-        String path = request.getServletPath();
-
-        // ✅ 1. Skip public paths
-        if (path.startsWith("/auth")
-                || path.startsWith("/swagger-ui")
-                || path.startsWith("/v3/api-docs")) {
-            filterChain.doFilter(request, response);
-            return;
+        String email = null;
+        String jwtToken = null;
+        // JWT Token is in the form "Bearer token". Remove Bearer word and get
+        // only the Token
+        if (requestTokenHeader != null && requestTokenHeader.startsWith("Bearer ")) {
+            jwtToken = requestTokenHeader.substring(7);
+            try {
+                email = jwtTokenUtil.getUsernameFromToken(jwtToken);
+            }
+//            catch (IllegalArgumentException e) {
+//                System.out.println("Unable to get JWT Token");
+////                throw new BadRequestException("Unable to get JWT Token");
+//            } catch (ExpiredJwtException e) {
+//                response.setHeader("error:", exception.getMessage());
+//                response.setStatus(FORBIDDEN.value());
+//                Map<String, String> error = new HashMap<>();
+//                error.put("error_message", exception.getMessage());
+//                response.setContentType(APPLICATION_JSON_VALUE);
+//                new ObjectMapper().writeValue(response.getOutputStream(), error);
+//            }
+            catch (Exception exception) {
+                response.setHeader("error", exception.getMessage());
+                response.setStatus(FORBIDDEN.value());
+                Map<String, String> error = new HashMap<>();
+                error.put("error_message", exception.getMessage());
+                response.setContentType(APPLICATION_JSON_VALUE);
+                new ObjectMapper().writeValue(response.getOutputStream(), error);
+            }
+        } else {
+            logger.warn("JWT Token does not begin with Bearer String");
         }
 
-        // ✅ 2. Read Authorization header
-        String header = request.getHeader("Authorization");
+        // Once we get the token validate it.
+        if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
 
-        if (header == null || !header.startsWith("Bearer ")) {
-            filterChain.doFilter(request, response);
-            return;
-        }
+            UserDetails userDetails = this.jwtUserDetailsService.loadUserByUsername(email);
 
-        String token = header.substring(7);
-        String username;
+            // if token is valid configure Spring Security to manually set
+            // authentication
+            if (jwtTokenUtil.validateToken(jwtToken, userDetails)) {
 
-        try {
-            username = jwtTokenUtil.getUsernameFromToken(token);
-        } catch (ExpiredJwtException e) {
-            sendError(response, "JWT token is expired");
-            return;
-        } catch (JwtException e) {
-            sendError(response, "Invalid JWT token");
-            return;
-        } catch (Exception e) {
-            sendError(response, "Cannot parse JWT token");
-            return;
-        }
-
-        // ✅ 3. Authenticate user if not already authenticated
-        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-
-            UserDetails userDetails =
-                    jwtUserDetailsService.loadUserByUsername(username);
-
-            if (jwtTokenUtil.validateToken(token, userDetails)) {
-
-                UsernamePasswordAuthenticationToken authToken =
-                        new UsernamePasswordAuthenticationToken(
-                                userDetails,
-                                null,
-                                userDetails.getAuthorities()
-                        );
-
-                authToken.setDetails(
-                        new WebAuthenticationDetailsSource().buildDetails(request)
-                );
-
-                // 🔥 THIS IS THE KEY LINE
-                SecurityContextHolder.getContext().setAuthentication(authToken);
+                UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(
+                        userDetails, null, userDetails.getAuthorities());
+                usernamePasswordAuthenticationToken
+                        .setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                // After setting the Authentication in the context, we specify
+                // that the current user is authenticated. So it passes the
+                // Spring Security Configurations successfully.
+                SecurityContextHolder.getContext().setAuthentication(usernamePasswordAuthenticationToken);
             }
         }
-
-        // ✅ 4. Continue filter chain
-        filterChain.doFilter(request, response);
-    }
-
-    private void sendError(HttpServletResponse response,
-                           String message) throws IOException {
-
-        response.setStatus(HttpStatus.UNAUTHORIZED.value());
-        response.setContentType(APPLICATION_JSON_VALUE);
-
-        Map<String, String> body = new HashMap<>();
-        body.put("error", message);
-
-        objectMapper.writeValue(response.getOutputStream(), body);
+        chain.doFilter(request, response);
     }
 }

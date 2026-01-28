@@ -4,6 +4,7 @@ import com.heang.drms_api.common.api.Code;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.FieldError;
@@ -61,8 +62,8 @@ public class GlobalExceptionHandler {
         });
 
         ApiResponse<Object> body = ApiResponse.error(
-                Code.REGISTRATION_FAILED,   // or create VALIDATION_ERROR code
-                errors                          // 👉 return “field -> message” map
+                Code.REGISTRATION_FAILED,
+                errors
         );
 
         return ResponseEntity
@@ -74,16 +75,13 @@ public class GlobalExceptionHandler {
     @ExceptionHandler({AuthenticationException.class, BadCredentialsException.class})
     public ResponseEntity<ApiResponse<Object>> handleAuthenticationException(
             Exception ex,
-            WebRequest request
-    ) {
-        ApiResponse<Object> body = ApiResponse.error(
-                Code.INVALID_CREDENTIALS,
-                ex.getMessage()
-        );
+            WebRequest request) {
+        ApiResponse<Object> body =
+                (ex instanceof AuthenticationCredentialsNotFoundException)
+                        ? ApiResponse.error(Code.AUTHENTICATION_FAILED, ex.getMessage())
+                        : ApiResponse.error(Code.AUTHENTICATION_FAILED, "Unauthenticated");
 
-        return ResponseEntity
-                .status(HttpStatus.UNAUTHORIZED)
-                .body(body);
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(body);
     }
 
     // 🔹 5. Access denied (no permission)

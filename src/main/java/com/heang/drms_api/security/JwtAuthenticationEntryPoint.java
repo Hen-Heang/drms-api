@@ -1,48 +1,37 @@
 package com.heang.drms_api.security;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.heang.drms_api.common.api.ApiErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.jspecify.annotations.NonNull;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
-import java.io.IOException;
 
+import java.io.IOException;
 
 @Component
 public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
 
-    private final ObjectMapper objectMapper;
-
-    public JwtAuthenticationEntryPoint(ObjectMapper objectMapper) {
-        this.objectMapper = objectMapper;
-    }
-
     @Override
-    public void commence(HttpServletRequest request,
-                         HttpServletResponse response,
-                         @NonNull AuthenticationException authException)
-            throws IOException {
-
-        // set the response status code to 401 Unauthorized (do not call sendError)
-        response.setStatus(HttpStatus.UNAUTHORIZED.value());
-        // Return JSON instead of plain text
-        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-
-        // Build custom error response
-        ApiErrorResponse errorResponse = new ApiErrorResponse(
-                HttpStatus.UNAUTHORIZED.value(),
-                "Unauthorized",
-                "You are not authorized to access this resource. Invalid or missing JWT token.",
-                request.getRequestURI()
-        );
-
-        // Convert it to JSON and write output using injected mapper
-        objectMapper.writeValue(response.getOutputStream(), errorResponse);
-        response.flushBuffer();
+    public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException {
+        response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized");
     }
+//    @Override
+//    public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException {
+//        response.setStatus(HttpStatus.UNAUTHORIZED.value());
+//        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+//
+//        // Create the response body
+//        ObjectMapper objectMapper = new ObjectMapper();
+//        ApiErrorResponse apiErrorResponse = new ApiErrorResponse(
+//                HttpStatus.UNAUTHORIZED,
+//                "Unauthorized access",
+//                authException.getMessage()
+//        );
+//        String responseBody = objectMapper.writeValueAsString(apiErrorResponse);
+//
+//        // Write the response body to the output stream
+//        PrintWriter writer = response.getWriter();
+//        writer.write(responseBody);
+//        writer.flush();
+//    }
 }
