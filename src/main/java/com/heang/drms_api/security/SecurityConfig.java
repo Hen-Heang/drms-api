@@ -1,6 +1,7 @@
 package com.heang.drms_api.security;
 
 import com.heang.drms_api.auth.service.JwtUserDetailsServiceImpl;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -15,6 +16,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
+@RequiredArgsConstructor
 public class SecurityConfig {
 
     private final JwtUserDetailsServiceImpl jwtUserDetailsService;
@@ -22,15 +24,15 @@ public class SecurityConfig {
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
     private final JwtRequestFilter jwtRequestFilter;
 
-    public SecurityConfig(JwtUserDetailsServiceImpl jwtUserDetailsService,
-                          PasswordEncoder passwordEncoder,
-                          JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint,
-                          JwtRequestFilter jwtRequestFilter) {
-        this.jwtUserDetailsService = jwtUserDetailsService;
-        this.passwordEncoder = passwordEncoder;
-        this.jwtAuthenticationEntryPoint = jwtAuthenticationEntryPoint;
-        this.jwtRequestFilter = jwtRequestFilter;
-    }
+//    public SecurityConfig(JwtUserDetailsServiceImpl jwtUserDetailsService,
+//                          PasswordEncoder passwordEncoder,
+//                          JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint,
+//                          JwtRequestFilter jwtRequestFilter) {
+//        this.jwtUserDetailsService = jwtUserDetailsService;
+//        this.passwordEncoder = passwordEncoder;
+//        this.jwtAuthenticationEntryPoint = jwtAuthenticationEntryPoint;
+//        this.jwtRequestFilter = jwtRequestFilter;
+//    }
 
     @Bean DaoAuthenticationProvider daoAuthenticationProvider() {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider(jwtUserDetailsService);
@@ -41,8 +43,8 @@ public class SecurityConfig {
     @Bean public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.cors(Customizer.withDefaults())
                 .csrf(AbstractHttpConfigurer::disable)
-                .authorizeHttpRequests(auth -> auth .requestMatchers("/api/v1/retailer/**").hasAuthority("RETAILER")
-                        .requestMatchers("/api/v1/distributor/**").hasAuthority("DISTRIBUTOR")
+                .authorizeHttpRequests(auth -> auth .requestMatchers("/api/v1/retailer/**").hasAuthority("MERCHANT")
+                        .requestMatchers("/api/v1/partner/**").hasAuthority("PARTNER")
                         .requestMatchers("/authorization/**",
                                 "/authorization/login",
                                 "/v3/api-docs/**",

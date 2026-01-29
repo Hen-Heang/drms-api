@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.heang.drms_api.partner.mapper.PartnerStoreMapper">
+    <resultMap id="StoreMap" type="com.heang.drms_api.partner.model.store.Store">
+        <id property="id" column="id"/>
+        <result property="name" column="name"/>
+        <result property="address" column="address"/>
+        <result property="bannerImage" column="banner_image"/>
+        <result property="partnerAccountId" column="partner_account_id"/>
+        <result property="description" column="description"/>
+        <result property="primaryPhone" column="phone"/>
+        <result property="createdDate" column="created_date"/>
+        <result property="updatedDate" column="updated_date"/>
+        <result property="isPublish" column="is_publish"/>
+
+        <association property="rating" column="id" select="getRating"/>
+        <association property="ratingCount" column="id" select="getRatingCount"/>
+        <collection property="additionalPhone" column="id" select="getAdditionalPhone"/>
+    </resultMap>
+
+    <resultMap id="StoreRetailerMap" type="com.heang.drms_api.merchant.model.StoreMerchant" extends="StoreMap">
+        <collection property="categories" column="id" select="getCategoryListingByStoreId"/>
+    </resultMap>
+
+    <select id="createNewStore" parameterType="map" resultMap="StoreMap">
+        INSERT INTO tb_store (
+        id, partner_account_id, name, description, created_date, updated_date, is_publish, banner_image, address, phone )
+        VALUES (
+        DEFAULT, #{currentUserId}, #{store.name}, #{store.description}, DEFAULT, DEFAULT, #{store.isPublish}, #{store.bannerImage}, #{store.address}, #{store.primaryPhone}
+        )
+        RETURNING id, name, address, banner_image, partner_account_id, description, phone, created_date, updated_date, is_publish </select>
+
+    <select id="getUserStore" parameterType="int" resultMap="StoreMap">
+        SELECT id, name, address, banner_image, partner_account_id, description, phone, created_date, updated_date, is_publish FROM tb_store WHERE partner_account_id = #{currentUserId}
+    </select>
+
+    <select id="getAllStore" resultMap="StoreRetailerMap">
+        SELECT id, name, address, banner_image, partner_account_id, description, phone, created_date, updated_date, is_publish FROM tb_store WHERE is_publish = true </select>
+
+    <select id="editAllFieldUserStore" parameterType="map" resultMap="StoreMap">
+        UPDATE tb_store SET name = #{store.name},
+        description = #{store.description},
+        updated_date = NOW(),
+        is_publish = #{store.isPublish},
+        banner_image = #{store.bannerImage},
+        address = #{store.address},
+        phone = #{store.primaryPhone}
+        WHERE id = #{storeId}
+        RETURNING id, name, address, banner_image, partner_account_id, description, phone, created_date, updated_date, is_publish </select>
+
+    <select id="getAllUserStoreSortByDateASC" parameterType="map" resultMap="StoreRetailerMap">
+        SELECT id, name, address, banner_image, partner_account_id, description, phone, created_date, updated_date, is_publish FROM tb_store WHERE is_publish = true ORDER BY created_date ASC LIMIT #{pageSize}
+        OFFSET #{pageSize} * (#{pageNumber} -1)
+    </select>
+
+    <select id="getAllUserStoreSortByDateDESC" parameterType="map" resultMap="StoreRetailerMap">
+        SELECT id, name, address, banner_image, partner_account_id, description, phone, created_date, updated_date, is_publish FROM tb_store WHERE is_publish = true ORDER BY created_date DESC LIMIT #{pageSize}
+        OFFSET #{pageSize} * (#{pageNumber} -1)
+    </select>
+
+    <select id="getAllUserStoreSortByCurrentUserFavoriteDESC" parameterType="map" resultMap="StoreRetailerMap">
+        SELECT tb_store.id AS id,
+        name, address, banner_image, tb_store.partner_account_id AS partner_account_id,
+        description, phone, created_date, updated_date, is_publish FROM tb_store FULL OUTER JOIN tb_bookmark tb ON tb_store.id = tb.store_id WHERE is_publish = TRUE ORDER BY (SELECT exists(SELECT1 FROM tb_bookmark WHERE tb.merchant_account_id = #{currentUser})) DESC LIMIT #{pageSize}
+        OFFSET #{pageSize} * (#{pageNumber} -1)
+    </select>
+
+    <select id="getAllBookmarkedStore" parameterType="map" resultMap="StoreRetailerMap">
+        SELECT tb_store.id AS id,
+        name, address, banner_image, tb_store.partner_account_id AS partner_account_id,
+        description, phone, created_date, updated_date, is_publish FROM tb_store WHERE is_publish = TRUE AND tb_store.id IN (SELECT DISTINCT store_id FROM tb_bookmark WHERE merchant_account_id = #{currentUser})
+        ORDER BY created_date ASC LIMIT #{pageSize}
+        OFFSET #{pageSize} * (#{pageNumber} -1)
+    </select>
+
+    <select id="searchStoreByName" parameterType="map" resultMap="StoreRetailerMap">
+        SELECT tb_store.id AS id,
+        name, address, banner_image, tb_store.partner_account_id AS partner_account_id,
+        description, phone, created_date, updated_date, is_publish FROM tb_store FULL OUTER JOIN tb_bookmark tb ON tb_store.id = tb.store_id WHERE is_publish = TRUE AND name ILIKE '%' || #{name} || '%'
+        ORDER BY (SELECT count(rated_star) FROM tb_rating_detail) DESC LIMIT #{pageSize}
+        OFFSET #{pageSize} * (#{pageNumber} -1)
+    </select>
+
+    <select id="getAllUserStoreSortByRatedStarASC" parameterType="map" resultMap="StoreRetailerMap">
+        SELECT tb_store.id AS id,
+        name, address, banner_image, tb_store.partner_account_id AS partner_account_id,
+        description, phone, created_date, updated_date, is_publish FROM tb_store FULL OUTER JOIN tb_bookmark tb ON tb_store.id = tb.store_id WHERE is_publish = TRUE GROUP BY tb_store.id ORDER BY (SELECT coalesce(avg(rated_star),0) FROM tb_rating_detail WHERE store_id = tb_store.id) ASC LIMIT #{pageSize}
+        OFFSET #{pageSize} * (#{pageNumber} -1)
+    </select>
+
+    <select id="getAllUserStoreSortByRatedStarDESC" parameterType="map" resultMap="StoreRetailerMap">
+        SELECT tb_store.id AS id,
+        name, address, banner_image, tb_store.partner_account_id AS partner_account_id,
+        description, phone, created_date, updated_date, is_publish FROM tb_store FULL OUTER JOIN tb_bookmark tb ON tb_store.id = tb.store_id WHERE is_publish = TRUE GROUP BY tb_store.id ORDER BY (SELECT coalesce(avg(rated_star),0) FROM tb_rating_detail WHERE store_id = tb_store.id) DESC LIMIT #{pageSize}
+        OFFSET #{pageSize} * (#{pageNumber} -1)
+    </select>
+
+    <select id="getAllUserStoreSortByNameASC" parameterType="map" resultMap="StoreRetailerMap">
+        SELECT tb_store.id AS id,
+        name, address, banner_image, tb_store.partner_account_id AS partner_account_id,
+        description, phone, created_date, updated_date, is_publish FROM tb_store FULL OUTER JOIN tb_bookmark tb ON tb_store.id = tb.store_id WHERE is_publish = TRUE ORDER BY name ASC LIMIT #{pageSize}
+        OFFSET #{pageSize} * (#{pageNumber} -1)
+    </select>
+
+    <select id="getAllUserStoreSortByNameDESC" parameterType="map" resultMap="StoreRetailerMap">
+        SELECT tb_store.id AS id,
+        name, address, banner_image, tb_store.partner_account_id AS partner_account_id,
+        description, phone, created_date, updated_date, is_publish FROM tb_store FULL OUTER JOIN tb_bookmark tb ON tb_store.id = tb.store_id WHERE is_publish = TRUE ORDER BY name DESC LIMIT #{pageSize}
+        OFFSET #{pageSize} * (#{pageNumber} -1)
+    </select>
+
+    <select id="getStoresByStoreIdsASC" parameterType="string" resultMap="StoreRetailerMap">
+        SELECT id, name, address, banner_image, partner_account_id, description, phone, created_date, updated_date, is_publish FROM tb_store WHERE id IN (${combinedList})
+        ORDER BY array_position('{${combinedList}}', id) ASC </select>
+
+    <select id="getStoresByStoreIdsDESC" parameterType="string" resultMap="StoreRetailerMap">
+        SELECT id, name, address, banner_image, partner_account_id, description, phone, created_date, updated_date, is_publish FROM tb_store WHERE id IN (${combinedList})
+        ORDER BY array_position('{${combinedList}}', id) DESC </select>
+
+    <select id="getStoresByCategorySearchASC" parameterType="map" resultMap="StoreRetailerMap">
+        SELECT id, name, address, banner_image, partner_account_id, description, phone, created_date, updated_date, is_publish FROM tb_store WHERE is_publish = TRUE AND id IN (
+        SELECT store_id FROM tb_store_category WHERE category_id IN (SELECT id FROM tb_category WHERE name ILIKE '%${name}%')
+        )
+        AND id IN (
+        SELECT store_id FROM tb_store_category WHERE category_id IN (SELECT DISTINCT category_id FROM tb_store_product_detail WHERE store_id = tb_store.id)
+        )
+        ORDER BY ${by} ASC </select>
+
+    <select id="getStoresByCategorySearchDESC" parameterType="map" resultMap="StoreRetailerMap">
+        SELECT id, name, address, banner_image, partner_account_id, description, phone, created_date, updated_date, is_publish FROM tb_store WHERE is_publish = TRUE AND id IN (
+        SELECT store_id FROM tb_store_category WHERE category_id IN (SELECT id FROM tb_category WHERE name ILIKE '%${name}%')
+        )
+        AND id IN (
+        SELECT store_id FROM tb_store_category WHERE category_id IN (SELECT DISTINCT category_id FROM tb_store_product_detail WHERE store_id = tb_store.id)
+        )
+        ORDER BY ${by} DESC </select>
+
+    <select id="getStoreIdsByCategorySearchASC" parameterType="map" resultType="int">
+        SELECT id FROM tb_store WHERE is_publish = TRUE AND id IN (
+        SELECT store_id FROM tb_store_product_detail WHERE product_id IN (SELECT id FROM tb_product WHERE name ILIKE '%${name}%')
+        )
+        ORDER BY ${by} ASC </select>
+
+    <select id="getStoreIdsByCategorySearchDESC" parameterType="map" resultType="int">
+        SELECT id FROM tb_store WHERE is_publish = TRUE AND id IN (
+        SELECT store_id FROM tb_store_product_detail WHERE product_id IN (SELECT id FROM tb_product WHERE name ILIKE '%${name}%')
+        )
+        ORDER BY ${by} DESC </select>
+
+    <select id="getStoresByProductSearchASC" parameterType="map" resultMap="StoreRetailerMap">
+        SELECT id, name, address, banner_image, partner_account_id, description, phone, created_date, updated_date, is_publish FROM tb_store WHERE is_publish = TRUE AND id IN (
+        SELECT store_id FROM tb_store_product_detail WHERE product_id IN (SELECT id FROM tb_product WHERE name ILIKE '%${name}%')
+        )
+        ORDER BY ${by} ASC </select>
+
+    <select id="getStoresByProductSearchDESC" parameterType="map" resultMap="StoreRetailerMap">
+        SELECT id, name, address, banner_image, partner_account_id, description, phone, created_date, updated_date, is_publish FROM tb_store WHERE is_publish = TRUE AND id IN (
+        SELECT store_id FROM tb_store_product_detail WHERE product_id IN (SELECT id FROM tb_product WHERE name ILIKE '%${name}%')
+        )
+        ORDER BY ${by} DESC </select>
+
+    <select id="getStoreIdByProductSearchASC" parameterType="map" resultType="int">
+        SELECT id FROM tb_store WHERE is_publish = TRUE AND id IN (
+        SELECT store_id FROM tb_store_product_detail WHERE product_id IN (SELECT id FROM tb_product WHERE name ILIKE '%${name}%')
+        )
+        ORDER BY ${by} ASC </select>
+
+    <select id="getStoreIdByProductSearchDESC" parameterType="map" resultType="int">
+        SELECT id FROM tb_store WHERE is_publish = TRUE AND id IN (
+        SELECT store_id FROM tb_store_product_detail WHERE product_id IN (SELECT id FROM tb_product WHERE name ILIKE '%${name}%')
+        )
+        ORDER BY ${by} DESC </select>
+
+    <select id="getStoresByNameSearchASC" parameterType="map" resultMap="StoreRetailerMap">
+        SELECT id, name, address, banner_image, partner_account_id, description, phone, created_date, updated_date, is_publish FROM tb_store WHERE is_publish = TRUE AND name ILIKE '%${name}%'
+        ORDER BY ${by} ASC </select>
+
+    <select id="getStoresByNameSearchDESC" parameterType="map" resultMap="StoreRetailerMap">
+        SELECT id, name, address, banner_image, partner_account_id, description, phone, created_date, updated_date, is_publish FROM tb_store WHERE is_publish = TRUE AND name ILIKE '%${name}%'
+        ORDER BY ${by} DESC </select>
+
+    <select id="getStoresIdByNameSearchASC" parameterType="map" resultType="int">
+        SELECT id FROM tb_store WHERE is_publish = TRUE AND name ILIKE '%${name}%'
+        ORDER BY ${by} ASC </select>
+
+    <select id="getStoresIdByNameSearchDESC" parameterType="map" resultType="int">
+        SELECT id FROM tb_store WHERE is_publish = TRUE AND name ILIKE '%${name}%'
+        ORDER BY ${by} DESC </select>
+
+    <select id="checkStoreIfCreated" parameterType="int" resultType="int">
+        SELECT CASE WHEN COUNT(*) >0 THEN1 ELSE0 END FROM tb_store WHERE partner_account_id = #{currentUserId}
+    </select>
+
+</mapper>
+

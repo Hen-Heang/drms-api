@@ -29,13 +29,11 @@ import java.util.Date;
 @RestController
 @CrossOrigin(origins = "*")
 @RequestMapping("/authorization")
-@Tag(name = "API authorization")
+@Tag(name = "API Authorization")
 public class JwtAuthenticationController {
     private final JwtTokenUtil jwtTokenUtil;
 
     private final AuthenticationManager authenticationManager;
-
-
     SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
     Date date;
 

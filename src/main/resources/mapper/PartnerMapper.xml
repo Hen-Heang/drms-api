@@ -1,31 +1,156 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
-        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
 <mapper namespace="com.heang.drms_api.partner.mapper.PartnerInfoMapper">
 
-    <insert id="insertPartnerInfo"
-            parameterType="com.heang.drms_api.partner.model.Partner"
-            useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO tb_partner_info (
+    <!-- Partner 결과 매핑 -->
+    <resultMap id="PartnerMap" type="com.heang.drms_api.partner.model.Partner">
+        <id     property="id"               column="id"/>
+        <result property="partnerAccountId" column="partner_account_id"/>
+        <result property="firstName"        column="first_name"/>
+        <result property="lastName"         column="last_name"/>
+        <result property="profileImage"     column="profile_image"/>
+        <result property="createdDate"      column="created_date"/>
+        <result property="updatedDate"      column="updated_date"/>
+        <result property="gender"           column="gender"/>
+    </resultMap>
+
+    <!-- 추가 전화번호 목록 -->
+    <select id="getAdditionalPhoneNumberByPartnerInfoId"
+            parameterType="int"
+            resultType="string">
+        SELECT phone_number
+        FROM tb_partner_phone
+        WHERE partner_info_id = #{id}
+    </select>
+
+    <!-- 프로필 가져오기 -->
+    <select id="getUserProfile"
+            parameterType="int"
+            resultMap="PartnerMap">
+        SELECT
+        id,
+        partner_account_id,
+        first_name,
+        last_name,
+        profile_image,
+        created_date,
+        updated_date,
+        gender
+        FROM tb_partner_info
+        WHERE partner_account_id = #{currentUserId}
+    </select>
+
+    <!-- Partner Info 생성 (PostgreSQL RETURNING 사용) -->
+    <select id="insertPartnerInfo"
+            parameterType="map"
+            resultMap="PartnerMap">
+        INSERT INTO tb_partner_info(
+        id,
         partner_account_id,
         first_name,
         last_name,
         gender,
         profile_image,
-        created_at,
-        updated_at
-        ) VALUES (
-        #{partnerAccountId},
-        #{firstName},
-        #{lastName},
-        #(gender),
-        #{profileImage},
-        NOW(),
-        NOW()
-        )Returning *;
+        created_date,
+        updated_date
+        )
+        VALUES (
+        DEFAULT,
+        #{currentUserId},
+        #{p.firstName},
+        #{p.lastName},
+        #{p.gender},
+        #{p.profileImage},
+        DEFAULT,
+        DEFAULT
+        )
+        RETURNING
+        id,
+        partner_account_id,
+        first_name,
+        last_name,
+        gender,
+        profile_image,
+        created_date,
+        updated_date
+    </select>
 
+    <!-- 프로필 수정 (RETURNING 사용) -->
+    <select id="updateUserProfile"
+            parameterType="map"
+            resultMap="PartnerMap">
+        UPDATE tb_partner_info
+        SET
+        first_name    = #{p.firstName},
+        last_name     = #{p.lastName},
+        gender        = #{p.gender},
+        profile_image = #{p.profileImage},
+        updated_date  = NOW()
+        WHERE partner_account_id = #{currentUserId}
+        RETURNING
+        id,
+        partner_account_id,
+        first_name,
+        last_name,
+        gender,
+        profile_image,
+        created_date,
+        updated_date
+    </select>
+
+    <!-- 추가 전화번호 저장 -->
+    <insert id="addAdditionalPhoneNumber" parameterType="map">
+        INSERT INTO tb_partner_phone
+        VALUES (DEFAULT, #{infoId}, #{additionalPhoneNumber})
     </insert>
 
+    <!-- 프로필 생성 여부 -->
+    <select id="checkIfUserProfileIsCreated"
+            parameterType="int"
+            resultType="boolean">
+        SELECT EXISTS(
+        SELECT 1
+        FROM tb_partner_info
+        WHERE partner_account_id = #{currentUserId}
+        )
+    </select>
+
+    <!-- 추가 전화번호 삭제(전부) -->
+    <delete id="deleteAdditionalPhoneNumber" parameterType="int">
+        DELETE FROM tb_partner_phone
+        WHERE partner_info_id = #{infoId}
+    </delete>
+
+    <!-- partner_info id 조회 -->
+    <select id="getPartnerInfoId"
+            parameterType="int"
+            resultType="int">
+        SELECT id
+        FROM tb_partner_info
+        WHERE partner_account_id = #{currentUserId}
+    </select>
+
+    <!-- 추가 전화번호 중복 체크 -->
+    <select id="checkIfAdditionalPhoneNumberExist"
+            parameterType="string"
+            resultType="boolean">
+        SELECT EXISTS(
+        SELECT 1
+        FROM tb_partner_phone
+        WHERE phone_number = #{additionalPhoneNumber}
+        )
+    </select>
+
+    <!-- storeId로 partner_account_id 조회 -->
+    <select id="getPartnerIdByStoreId"
+            parameterType="int"
+            resultType="int">
+        SELECT partner_account_id
+        FROM tb_store
+        WHERE id = #{storeId}
+    </select>
 
 </mapper>

@@ -2,17 +2,12 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
 <mapper namespace="com.heang.drms_api.auth.mapper.AuthUserMapper">
 
-<!--    <resultMap id="AuthUserMap" type="com.heang.drms_api.auth.model.AppUser">-->
-<!--        <id     property="id"        column="id"/>-->
-<!--        <result property="email"     column="email"/>-->
-<!--        <result property="password"  column="password"/>-->
-<!--        <result property="role"      column="role"/>-->
-<!--        <result property="roleId"    column="role_id"/>-->
-<!--        <result property="isVerified"  column="is_verified"/>-->
-<!--        <result property="isActive"    column="is_active"/>-->
-<!--    </resultMap>-->
+    <!-- ======================
+         RESULT MAP
+    ======================= -->
     <resultMap id="AppUserMap" type="com.heang.drms_api.auth.model.AppUser">
         <id property="id" column="id"/>
         <result property="email" column="email"/>
@@ -23,257 +18,160 @@
         <result property="isActive" column="is_active"/>
     </resultMap>
 
+    <!-- ======================
+         INSERT USERS
+    ======================= -->
+    <select id="insertPartnerUser" parameterType="map" resultMap="AppUserMap">
+        INSERT INTO tb_partner_account
+        VALUES (DEFAULT, #{user.roleId}, #{user.email}, #{user.password},
+        DEFAULT, DEFAULT, DEFAULT, DEFAULT)
+        RETURNING *
+    </select>
 
-    <sql id="AccountReturningColumns">
-        id,
-        email,
-        password,
-        role_id,
-        is_verified,
-        is_active
-    </sql>
+    <select id="insertMerchantUser" parameterType="map" resultMap="AppUserMap">
+        INSERT INTO tb_merchant_account
+        VALUES (DEFAULT, #{user.roleId}, #{user.email}, #{user.password},
+        DEFAULT, DEFAULT, DEFAULT, DEFAULT)
+        RETURNING *
+    </select>
 
-<!--    <select id="insertPartnerUser" parameterType="map" resultMap="AuthUserMap">-->
-<!--        INSERT INTO tb_partner_account (role_id, email, password)-->
-<!--        VALUES (#{user.roleId}, #{user.email}, #{user.password})-->
-<!--        RETURNING-->
-<!--        id,-->
-<!--        email,-->
-<!--        password,-->
-<!--        role_id,-->
-<!--        is_verified,-->
-<!--        is_active-->
-<!--    </select>-->
+    <!-- ======================
+         FIND USERS
+    ======================= -->
+    <select id="findPartnerUserByEmail" parameterType="string" resultMap="AppUserMap">
+        SELECT
+        ta.id,
+        ta.email,
+        ta.password,
+        tr.name AS role,
+        ta.role_id,
+        ta.is_verified,
+        ta.is_active
+        FROM tb_partner_account ta
+        JOIN tb_role tr ON ta.role_id = tr.id
+        WHERE ta.email = #{email}
+    </select>
 
-<!--    <select id="insertMerchantUser" parameterType="map" resultMap="AuthUserMap">-->
-<!--        INSERT INTO tb_merchant_account (role_id, email, password)-->
-<!--        VALUES (#{user.roleId}, #{user.email}, #{user.password})-->
-<!--        RETURNING-->
-<!--        id,-->
-<!--        email,-->
-<!--        password,-->
-<!--        role_id,-->
-<!--        is_verified,-->
-<!--        is_active-->
-<!--    </select>-->
+    <select id="findPartnerUserById" parameterType="int" resultMap="AppUserMap">
+        SELECT
+        ta.id,
+        ta.email,
+        ta.password,
+        tr.name AS role,
+        ta.role_id,
+        ta.is_verified,
+        ta.is_active
+        FROM tb_partner_account ta
+        JOIN tb_role tr ON ta.role_id = tr.id
+        WHERE ta.id = #{id}
+    </select>
 
+    <select id="findMerchantUserByEmail" parameterType="string" resultMap="AppUserMap">
+        SELECT
+        ta.id,
+        ta.email,
+        ta.password,
+        tr.name AS role,
+        ta.role_id,
+        ta.is_verified,
+        ta.is_active
+        FROM tb_merchant_account ta
+        JOIN tb_role tr ON ta.role_id = tr.id
+        WHERE ta.email = #{email}
+    </select>
 
-<!--    &lt;!&ndash;    Find By Email &ndash;&gt;-->
-<!--    <select id="findPartnerByEmail" parameterType="string" resultType="com.heang.drms_api.auth.model.AppUser">-->
-<!--        SELECT-->
-<!--        ta.id AS id,-->
-<!--        ta.email AS email,-->
-<!--        ta.password AS password,-->
-<!--        tr.name AS role,-->
-<!--        ta.role_id AS role_id,-->
-<!--        ta.is_verified AS is_verified,-->
-<!--        ta.is_active AS is_active-->
-<!--        FROM tb_partner_account ta-->
-<!--        JOIN tb_role tr ON ta.role_id = tr.id-->
-<!--        WHERE ta.email = #{email}-->
-<!--    </select>-->
-<!--    <select id="findMerchantByEmail" parameterType="string" resultType="com.heang.drms_api.auth.model.AppUser">-->
-<!--        SELECT-->
-<!--        ta.id AS id,-->
-<!--        ta.email AS email,-->
-<!--        ta.password AS password,-->
-<!--        tr.name AS role,-->
-<!--        ta.role_id AS role_id,-->
-<!--        ta.is_verified AS is_verified,-->
-<!--        ta.is_active AS is_active-->
-<!--        FROM tb_merchant_account ta-->
-<!--        JOIN tb_role tr ON ta.role_id = tr.id-->
-<!--        WHERE ta.email = #{email}-->
-<!--    </select>-->
+    <!-- ======================
+         PHONE CHECKS
+    ======================= -->
+    <select id="checkPhoneNumberFromPartnerPhone" parameterType="string" resultType="boolean">
+        SELECT EXISTS(
+        SELECT 1 FROM tb_partner_phone WHERE phone_number = #{phone}
+        )
+    </select>
 
+    <select id="checkPhoneNumberFromPartnerDetail" parameterType="string" resultType="boolean">
+        SELECT EXISTS(
+        SELECT 1 FROM tb_partner_info WHERE primary_phone_number = #{phone}
+        )
+    </select>
 
-<!--    &lt;!&ndash;    Check Exist Email &ndash;&gt;-->
-<!--    <select id="existsPartnerEmail" parameterType="string" resultType="boolean">-->
-<!--        SELECT EXISTS (SELECT 1 FROM tb_partner_account WHERE email = #{email})-->
-<!--    </select>-->
-<!--    <select id="existsMerchantEmail" parameterType="string" resultType="boolean">-->
-<!--        SELECT EXISTS (SELECT 1 FROM tb_merchant_account WHERE email = #{email})-->
-<!--    </select>-->
+    <select id="checkPhoneNumberFromMerchantPhone" parameterType="string" resultType="boolean">
+        SELECT EXISTS(
+        SELECT 1 FROM tb_merchant_phone WHERE phone_number = #{phone}
+        )
+    </select>
 
+    <select id="checkPhoneNumberFromMerchantDetail" parameterType="string" resultType="boolean">
+        SELECT EXISTS(
+        SELECT 1 FROM tb_merchant_info WHERE primary_phone_number = #{phone}
+        )
+    </select>
 
-<!--    &lt;!&ndash;    Get RoleId By Email&ndash;&gt;-->
-<!--    <select id="getPartnerRoleIdByEmail" parameterType="string" resultType="int">-->
-<!--        SELECT role_id FROM  tb_partner_account WHERE email = #{email}-->
-<!--    </select>-->
-<!--    <select id="getMerchantRoleIdByEmail" parameterType="string" resultType="int">-->
-<!--        SELECT role_id FROM  tb_merchant_account WHERE email = #{email}-->
-<!--    </select>-->
+    <!-- ======================
+         ROLE ID
+    ======================= -->
+    <select id="getRoleIdByMailPartner" parameterType="string" resultType="int">
+        SELECT role_id FROM tb_partner_account WHERE email = #{email}
+    </select>
 
+    <select id="getRoleIdByMailMerchant" parameterType="string" resultType="int">
+        SELECT role_id FROM tb_merchant_account WHERE email = #{email}
+    </select>
 
-<!--   &lt;!&ndash;  Get UserId By Email  &ndash;&gt;-->
-<!--    <select id="getPartnerUserIdByEmail" parameterType="string" resultType="int">-->
-<!--        SELECT id FROM  tb_partner_account WHERE email = #{email}-->
-<!--    </select>-->
-<!--    <select id="getMerchantUserIdByEmail" parameterType="string" resultType="int">-->
-<!--        SELECT id FROM  tb_merchant_account WHERE email = #{email}-->
-<!--    </select>-->
+    <!-- ======================
+         VERIFIED
+    ======================= -->
+    <select id="getVerifyPartnerEmail" parameterType="string" resultType="boolean">
+        SELECT is_verified FROM tb_partner_account WHERE email = #{email}
+    </select>
 
-<!--    &lt;!&ndash;    Get verify Email&ndash;&gt;-->
-<!--    <select id="verifyPartnerEmail" parameterType="string" >-->
-<!--        SELECT is_verified FROM  tb_partner_account-->
-<!--        WHERE email = #{email};-->
-<!--    </select>-->
-<!--    <select id="verifyMerchantEmail" parameterType="string" >-->
-<!--        SELECT is_verified FROM tb_merchant_account-->
-<!--        WHERE email = #{email};-->
-<!--    </select>-->
+    <select id="getVerifyMerchantEmail" parameterType="string" resultType="boolean">
+        SELECT is_verified FROM tb_merchant_account WHERE email = #{email}
+    </select>
 
+    <!-- ======================
+         UPDATE PASSWORD (RETURNING *)
+    ======================= -->
+    <select id="updatePartnerUser" parameterType="map" resultMap="AppUserMap">
+        UPDATE tb_partner_account
+        SET password = #{req.newPassword}
+        WHERE email = #{req.email}
+        RETURNING *
+    </select>
 
+    <select id="updateMerchantUser" parameterType="map" resultMap="AppUserMap">
+        UPDATE tb_merchant_account
+        SET password = #{req.newPassword}
+        WHERE email = #{req.email}
+        RETURNING *
+    </select>
 
-        <!-- ======================
-             INSERT (RETURNING *)
-             Use <select> because Postgres returns a row
-        ======================= -->
-        <select id="insertDistributorUser" parameterType="map" resultMap="AppUserMap">
-            INSERT INTO tb_distributor_account
-            VALUES (DEFAULT, #{user.roleId}, #{user.email}, #{user.password}, DEFAULT, DEFAULT, DEFAULT, DEFAULT)
-            RETURNING *
-        </select>
+    <!-- ======================
+         FORGET PASSWORD
+    ======================= -->
+    <select id="updateForgetPartnerUser" parameterType="map" resultType="string">
+        UPDATE tb_partner_account
+        SET password = #{newPassword}
+        WHERE email = #{email}
+        RETURNING password
+    </select>
 
-        <select id="insertRetailerUser" parameterType="map" resultMap="AppUserMap">
-            INSERT INTO tb_retailer_account
-            VALUES (DEFAULT, #{user.roleId}, #{user.email}, #{user.password}, DEFAULT, DEFAULT, DEFAULT, DEFAULT)
-            RETURNING *
-        </select>
+    <select id="updateForgetMerchantUser" parameterType="map" resultType="string">
+        UPDATE tb_merchant_account
+        SET password = #{newPassword}
+        WHERE email = #{email}
+        RETURNING password
+    </select>
 
-        <!-- ======================
-             FIND USERS
-        ======================= -->
-        <select id="findDistributorUserByEmail" parameterType="string" resultMap="AppUserMap">
-            SELECT
-            ta.id,
-            ta.email,
-            ta.password,
-            tr.name AS role,
-            ta.role_id,
-            ta.is_verified,
-            ta.is_active
-            FROM tb_distributor_account ta
-            JOIN tb_role tr ON ta.role_id = tr.id
-            WHERE ta.email = #{email}
-        </select>
+    <!-- ======================
+         GET USER ID
+    ======================= -->
+    <select id="getUserIdByMailPartner" parameterType="string" resultType="int">
+        SELECT id FROM tb_partner_account WHERE email = #{email}
+    </select>
 
-        <select id="findDistributorUserById" parameterType="int" resultMap="AppUserMap">
-            SELECT
-            ta.id,
-            ta.email,
-            ta.password,
-            tr.name AS role,
-            ta.role_id,
-            ta.is_verified,
-            ta.is_active
-            FROM tb_distributor_account ta
-            JOIN tb_role tr ON ta.role_id = tr.id
-            WHERE ta.id = #{id}
-        </select>
-
-        <select id="findRetailerUserByEmail" parameterType="string" resultMap="AppUserMap">
-            SELECT
-            ta.id,
-            ta.email,
-            ta.password,
-            tr.name AS role,
-            ta.role_id,
-            ta.is_verified,
-            ta.is_active
-            FROM tb_retailer_account ta
-            JOIN tb_role tr ON ta.role_id = tr.id
-            WHERE ta.email = #{email}
-        </select>
-
-        <!-- ======================
-             PHONE CHECKS
-        ======================= -->
-        <select id="checkPhoneNumberFromDistributorPhone" parameterType="string" resultType="boolean">
-            SELECT EXISTS(SELECT 1 FROM tb_distributor_phone WHERE phone_number = #{phone})
-        </select>
-
-        <select id="checkPhoneNumberFromDistributorDetail" parameterType="string" resultType="boolean">
-            SELECT EXISTS(SELECT 1 FROM tb_distributor_info WHERE primary_phone_number = #{phone})
-        </select>
-
-        <select id="checkPhoneNumberFromRetailerPhone" parameterType="string" resultType="boolean">
-            SELECT EXISTS(SELECT 1 FROM tb_retailer_phone WHERE phone_number = #{phone})
-        </select>
-
-        <select id="checkPhoneNumberFromRetailerDetail" parameterType="string" resultType="boolean">
-            SELECT EXISTS(SELECT 1 FROM tb_retailer_info WHERE primary_phone_number = #{phone})
-        </select>
-
-        <!-- ======================
-             ROLE ID
-        ======================= -->
-        <select id="getRoleIdByMail" parameterType="string" resultType="int">
-            SELECT role_id FROM tb_distributor_account WHERE email = #{email}
-        </select>
-
-        <select id="getRoleIdByMailRetailer" parameterType="string" resultType="int">
-            SELECT role_id FROM tb_retailer_account WHERE email = #{email}
-        </select>
-
-        <!-- ======================
-             VERIFIED
-        ======================= -->
-        <select id="getVerifyDistributorEmail" parameterType="string" resultType="boolean">
-            SELECT is_verified FROM tb_distributor_account WHERE email = #{email}
-        </select>
-
-        <select id="getVerifyRetailerEmail" parameterType="string" resultType="boolean">
-            SELECT is_verified FROM tb_retailer_account WHERE email = #{email}
-        </select>
-
-        <!-- ======================
-             UPDATE PASSWORD (RETURNING *)
-             Use <select> because it returns row
-        ======================= -->
-        <select id="updateDistributorUser" parameterType="map" resultMap="AppUserMap">
-            UPDATE tb_distributor_account
-            SET password = #{req.newPassword}
-            WHERE email = #{req.email}
-            RETURNING *
-        </select>
-
-        <select id="updateRetailerUser" parameterType="map" resultMap="AppUserMap">
-            UPDATE tb_retailer_account
-            SET password = #{req.newPassword}
-            WHERE email = #{req.email}
-            RETURNING *
-        </select>
-
-        <!-- ======================
-             FORGET PASSWORD (RETURNING password)
-        ======================= -->
-        <select id="updateForgetDistributorUser" parameterType="map" resultType="string">
-            UPDATE tb_distributor_account
-            SET password = #{newPassword}
-            WHERE email = #{email}
-            RETURNING password
-        </select>
-
-        <select id="updateForgetRetailerUser" parameterType="map" resultType="string">
-            UPDATE tb_retailer_account
-            SET password = #{newPassword}
-            WHERE email = #{email}
-            RETURNING password
-        </select>
-
-        <!-- ======================
-             GET USER ID
-        ======================= -->
-        <select id="getUserIdByMailDistributor" parameterType="string" resultType="int">
-            SELECT id FROM tb_distributor_account WHERE email = #{email}
-        </select>
-
-        <select id="getUserIdByMailRetailer" parameterType="string" resultType="int">
-            SELECT id FROM tb_retailer_account WHERE email = #{email}
-        </select>
-
-
-
+    <select id="getUserIdByMailMerchant" parameterType="string" resultType="int">
+        SELECT id FROM tb_merchant_account WHERE email = #{email}
+    </select>
 
 </mapper>

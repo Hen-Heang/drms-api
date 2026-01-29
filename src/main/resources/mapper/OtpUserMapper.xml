@@ -23,109 +23,118 @@
         <result property="otpCode"     column="otp_code"/>
         <result property="email"       column="email"/>
         <result property="createdDate" column="created_date"/>
-        <!-- if your Otp model has distributorAccountId / retailerAccountId, tell me and I’ll map it perfectly -->
     </resultMap>
 
-    <!-- Activated check -->
-    <select id="checkIfActivatedByDistributorEmail" parameterType="string" resultMap="AppUserMap">
+    <!-- ======================
+         Activated check
+    ======================= -->
+    <select id="checkIfActivatedByPartnerEmail" parameterType="string" resultMap="AppUserMap">
         SELECT
         ta.id, ta.email, ta.password,
         tr.name AS role,
         ta.role_id, ta.is_verified, ta.is_active
-        FROM tb_distributor_account ta
+        FROM tb_partner_account ta
         JOIN tb_role tr ON ta.role_id = tr.id
         WHERE ta.email = #{email}
         AND ta.is_verified = TRUE
     </select>
 
-    <select id="checkIfActivatedByRetailerEmail" parameterType="string" resultMap="AppUserMap">
+    <select id="checkIfActivatedByMerchantEmail" parameterType="string" resultMap="AppUserMap">
         SELECT
         ta.id, ta.email, ta.password,
         tr.name AS role,
         ta.role_id, ta.is_verified, ta.is_active
-        FROM tb_retailer_account ta
+        FROM tb_merchant_account ta
         JOIN tb_role tr ON ta.role_id = tr.id
         WHERE ta.email = #{email}
         AND ta.is_verified = TRUE
     </select>
 
-    <!-- Insert OTP (RETURNING row => use <select>) -->
-    <select id="generateDistributorOtp" parameterType="map" resultMap="OtpMap">
-        INSERT INTO tb_distributor_otp
+    <!-- ======================
+         Insert OTP (RETURNING row => use <select>)
+    ======================= -->
+    <select id="generatePartnerOtp" parameterType="map" resultMap="OtpMap">
+        INSERT INTO tb_partner_otp
         VALUES (DEFAULT, #{currentUserId}, #{otpNumber}, #{email}, #{time})
         RETURNING
         id,
         otp_code,
-        distributor_email AS email,
+        partner_email AS email,
         created_date
     </select>
 
-    <select id="generateRetailerOtp" parameterType="map" resultMap="OtpMap">
-        INSERT INTO tb_retailer_otp
+    <select id="generateMerchantOtp" parameterType="map" resultMap="OtpMap">
+        INSERT INTO tb_merchant_otp
         VALUES (DEFAULT, #{currentUserId}, #{otpNumber}, #{email}, #{time})
         RETURNING
         id,
         otp_code,
-        retailer_email AS email,
+        merchant_email AS email,
         created_date
     </select>
 
-    <!-- Get user -->
-    <select id="getUserDistributorByEmail" parameterType="string" resultMap="AppUserMap">
+    <!-- ======================
+         Get user
+    ======================= -->
+    <select id="getUserPartnerByEmail" parameterType="string" resultMap="AppUserMap">
         SELECT
         ta.id, ta.email, ta.password,
         tr.name AS role,
         ta.role_id, ta.is_verified, ta.is_active
-        FROM tb_distributor_account ta
+        FROM tb_partner_account ta
         JOIN tb_role tr ON ta.role_id = tr.id
         WHERE ta.email = #{email}
     </select>
 
-    <select id="getUserRetailerByEmail" parameterType="string" resultMap="AppUserMap">
+    <select id="getUserMerchantByEmail" parameterType="string" resultMap="AppUserMap">
         SELECT
         ta.id, ta.email, ta.password,
         tr.name AS role,
         ta.role_id, ta.is_verified, ta.is_active
-        FROM tb_retailer_account ta
+        FROM tb_merchant_account ta
         JOIN tb_role tr ON ta.role_id = tr.id
         WHERE ta.email = #{email}
     </select>
 
-    <!-- Get latest OTP -->
-    <select id="getDistributorOtpByEmail" parameterType="string" resultMap="OtpMap">
+    <!-- ======================
+         Get latest OTP
+    ======================= -->
+    <select id="getPartnerOtpByEmail" parameterType="string" resultMap="OtpMap">
         SELECT
         id,
         otp_code,
-        distributor_email AS email,
+        partner_email AS email,
         created_date
-        FROM tb_distributor_otp
-        WHERE distributor_email = #{email}
+        FROM tb_partner_otp
+        WHERE partner_email = #{email}
         ORDER BY created_date DESC
         LIMIT 1
     </select>
 
-    <select id="getRetailerOtpByEmail" parameterType="string" resultMap="OtpMap">
+    <select id="getMerchantOtpByEmail" parameterType="string" resultMap="OtpMap">
         SELECT
         id,
         otp_code,
-        retailer_email AS email,
+        merchant_email AS email,
         created_date
-        FROM tb_retailer_otp
-        WHERE retailer_email = #{email}
+        FROM tb_merchant_otp
+        WHERE merchant_email = #{email}
         ORDER BY created_date DESC
         LIMIT 1
     </select>
 
-    <!-- Verify email -->
-    <select id="verifyDistributor" parameterType="string" resultType="string">
-        UPDATE tb_distributor_account
+    <!-- ======================
+         Verify email
+    ======================= -->
+    <select id="verifyPartner" parameterType="string" resultType="string">
+        UPDATE tb_partner_account
         SET is_verified = TRUE
         WHERE email = #{email}
         RETURNING '1'
     </select>
 
-    <select id="verifyRetailer" parameterType="string" resultType="string">
-        UPDATE tb_retailer_account
+    <select id="verifyMerchant" parameterType="string" resultType="string">
+        UPDATE tb_merchant_account
         SET is_verified = TRUE
         WHERE email = #{email}
         RETURNING '1'

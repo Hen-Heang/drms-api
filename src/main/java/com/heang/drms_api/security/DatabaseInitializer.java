@@ -17,23 +17,24 @@ public class DatabaseInitializer {
     @PostConstruct
     public void createOtpTablesIfMissing() {
         jdbcTemplate.execute("""
-                CREATE TABLE IF NOT EXISTS tb_distributor_otp (
+                CREATE TABLE IF NOT EXISTS tb_partner_otp (
                     id SERIAL PRIMARY KEY,
-                    distributor_account_id INTEGER NOT NULL REFERENCES tb_distributor_account (id) ON DELETE CASCADE,
+                    partner_account_id INTEGER NOT NULL REFERENCES tb_partner_account (id) ON DELETE CASCADE,
                     otp_code INTEGER NOT NULL,
-                    distributor_email VARCHAR(255) NOT NULL,
+                    partner_email VARCHAR(255) NOT NULL,
                     created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 );
                 """);
 
         jdbcTemplate.execute("""
-                CREATE TABLE IF NOT EXISTS tb_retailer_otp (
+                CREATE TABLE IF NOT EXISTS tb_merchant_otp (
                     id SERIAL PRIMARY KEY,
-                    retailer_account_id INTEGER NOT NULL REFERENCES tb_retailer_account (id) ON DELETE CASCADE,
+                   merchant_account_id INTEGER NOT NULL REFERENCES tb_merchant_account (id) ON DELETE CASCADE,
                     otp_code INTEGER NOT NULL,
-                    retailer_email VARCHAR(255) NOT NULL,
+                   merchant_email VARCHAR(255) NOT NULL,
                     created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 );
                 """);
+
     }
 }

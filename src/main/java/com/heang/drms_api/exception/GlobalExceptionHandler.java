@@ -1,138 +1,103 @@
 package com.heang.drms_api.exception;
-import com.heang.drms_api.common.api.ApiResponse;
-import com.heang.drms_api.common.api.Code;
+
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.core.AuthenticationException;
-import org.springframework.validation.FieldError;
-import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.web.context.request.WebRequest;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.net.URI;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
-
-    // 🔹 1. Resource isn't found (ex: entity not in DB)
-    @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<ApiResponse<Object>> handleResourceNotFoundException(
-            ResourceNotFoundException ex,
-            WebRequest request
-    ) {
-        ApiResponse<Object> body = ApiResponse.error(
-                Code.SYSTEM_ERROR,   // later you can create specific code like NOT_FOUND
-                ex.getMessage()
-        );
-        return ResponseEntity
-                .status(HttpStatus.NOT_FOUND)
-                .body(body);
+    @ExceptionHandler(NonAuthoritativeInformationException.class)
+    ProblemDetail handleNoContentExceptionException(NonAuthoritativeInformationException nonAuthoritativeInformationException){
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatusCode.valueOf(203), nonAuthoritativeInformationException.getMessage());
+        problemDetail.setType(URI.create("localhost:8080/error/non-authorized"));
+        return problemDetail;
     }
 
-    // 🔹 2. Bat aquest (invàlid parameter format, etc.)
-    @ExceptionHandler(org.apache.coyote.BadRequestException.class)
-    public ResponseEntity<ApiResponse<Object>> handleBadRequestException(
-            org.apache.coyote.BadRequestException ex,
-            WebRequest request
-    ) {
-        ApiResponse<Object> body = ApiResponse.error(
-                Code.REGISTRATION_FAILED,  // or create GENERIC_BAD_REQUEST
-                ex.getMessage()
-        );
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(body);
+    @ExceptionHandler(InternalServerErrorException.class)
+    ProblemDetail handleInsertFailedException(InternalServerErrorException internalServerErrorException){
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatusCode.valueOf(500), internalServerErrorException.getMessage());
+        problemDetail.setType(URI.create("localhost:8080/error/internal-server-error"));
+        return problemDetail;
     }
 
-    // 🔹 3. Validation errors (@Valid DTO)
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ApiResponse<Object>> handleValidationExceptions(
-            MethodArgumentNotValidException ex
-    ) {
-        Map<String, String> errors = new HashMap<>();
-        ex.getBindingResult().getAllErrors().forEach(error -> {
-            String fieldName = ((FieldError) error).getField();
-            String errorMessage = error.getDefaultMessage();
-            errors.put(fieldName, errorMessage);
-        });
-
-        ApiResponse<Object> body = ApiResponse.error(
-                Code.REGISTRATION_FAILED,
-                errors
-        );
-
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(body);
+    @ExceptionHandler(NoContentException.class)
+    ProblemDetail handleAlreadyExistException(NoContentException noContentException){
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatusCode.valueOf(204), noContentException.getMessage());
+        problemDetail.setType(URI.create("localhost:8080/error/no-content"));
+        return problemDetail;
     }
 
-    // 🔹 4. Authentication / login errors
-    @ExceptionHandler({AuthenticationException.class, BadCredentialsException.class})
-    public ResponseEntity<ApiResponse<Object>> handleAuthenticationException(
-            Exception ex,
-            WebRequest request) {
-        ApiResponse<Object> body =
-                (ex instanceof AuthenticationCredentialsNotFoundException)
-                        ? ApiResponse.error(Code.AUTHENTICATION_FAILED, ex.getMessage())
-                        : ApiResponse.error(Code.AUTHENTICATION_FAILED, "Unauthenticated");
-
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(body);
+    @ExceptionHandler(OKException.class)
+    ProblemDetail handleOKException(OKException okException){
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatusCode.valueOf(200), okException.getMessage());
+        problemDetail.setType(URI.create("localhost:8080/error/ok"));
+        return problemDetail;
     }
 
-    // 🔹 5. Access denied (no permission)
-    @ExceptionHandler(AccessDeniedException.class)
-    public ResponseEntity<ApiResponse<Object>> handleAccessDeniedException(
-            AccessDeniedException ex,
-            WebRequest request
-    ) {
-        ApiResponse<Object> body = ApiResponse.error(
-                Code.INSUFFICIENT_PERMISSIONS,
-                ex.getMessage()
-        );
-
-        return ResponseEntity
-                .status(HttpStatus.FORBIDDEN)
-                .body(body);
+    @ExceptionHandler(NotModifiedException.class)
+    ProblemDetail handleNotMatchException(NotModifiedException notModifiedException){
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatusCode.valueOf(304), notModifiedException.getMessage());
+        problemDetail.setType(URI.create("localhost:8080/error/not-modified"));
+        return problemDetail;
     }
 
-    // 🔹 6. Custom BusinessException (you already did this well)
-    @ExceptionHandler(BusinessException.class)
-    public ResponseEntity<ApiResponse<Object>> handleBusinessException(
-            BusinessException ex,
-            WebRequest request
-    ) {
-        ApiResponse<Object> body = ApiResponse.error(
-                ex.getErrorCode(),
-                ex.getBody() != null ? ex.getBody() : ex.getMessage()
-        );
-
-        return ResponseEntity
-                .status(HttpStatus.valueOf(ex.getErrorCode().getHttpCode()))
-                .body(body);
+    @ExceptionHandler(ConflictException.class)
+    ProblemDetail handleDuplicateUserException(ConflictException conflictException){
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatusCode.valueOf(409), conflictException.getMessage());
+        problemDetail.setType(URI.create("localhost:8080/error/conflict"));
+        return problemDetail;
     }
 
-    // 🔹 7. Fallback – unknown error
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<ApiResponse<Object>> handleGlobalException(
-            Exception ex,
-            WebRequest request
-    ) {
-        ApiResponse<Object> body = ApiResponse.error(
-                Code.UNKNOWN_ERROR,
-                ex.getMessage()
-        );
+    @ExceptionHandler(BadRequestException.class)
+    ProblemDetail handleIllegalInputException(BadRequestException badRequestException){
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatusCode.valueOf(400), badRequestException.getMessage());
+        problemDetail.setType(URI.create("localhost:8080/error/bad-request"));
+        return problemDetail;
+    }
 
-        return ResponseEntity
-                .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(body);
+    @ExceptionHandler(ForbiddenException.class)
+    ProblemDetail handleForbiddenException(ForbiddenException forbiddenException){
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatusCode.valueOf(403), forbiddenException.getMessage());
+        problemDetail.setType(URI.create("localhost:8080/error/forbidden"));
+        return problemDetail;
+    }
+
+    @ExceptionHandler(ImATeaPotException.class)
+    ProblemDetail handleImATeaPotException(ImATeaPotException imATeaPotException){
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatusCode.valueOf(418), imATeaPotException.getMessage());
+        problemDetail.setType(URI.create("localhost:8080/error/Im-a-Teapot0_o"));
+        return problemDetail;
+    }
+
+    @ExceptionHandler(UnauthorizedException.class)
+    ProblemDetail handleUnauthorizedException(UnauthorizedException unauthorizedException){
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatusCode.valueOf(401), unauthorizedException.getMessage());
+        problemDetail.setType(URI.create("localhost:8080/error/unauthorized"));
+        return problemDetail;
+    }
+
+    @ExceptionHandler(NotFoundException.class)
+    ProblemDetail handleNotFoundException(NotFoundException notFoundException){
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatusCode.valueOf(404), notFoundException.getMessage());
+        problemDetail.setType(URI.create("localhost:8080/error/not-found"));
+        return problemDetail;
+    }
+    @ExceptionHandler(AlreadyExistException.class)
+    ProblemDetail handleFoundException(AlreadyExistException alreadyExistException){
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatusCode.valueOf(404), alreadyExistException.getMessage());
+        problemDetail.setType(URI.create("localhost:8080/error/already-exist"));
+        return problemDetail;
+    }
+
+    @ExceptionHandler(DefaultValueException.class)
+    ProblemDetail handleDefaultValueException(DefaultValueException defaultValueException) {
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, defaultValueException.getMessage());
+        // can create actual endpoint for this URI if required
+        problemDetail.setType(URI.create("localhost:8080/error/bad-request"));
+        return problemDetail;
     }
 }
-
-
-
-

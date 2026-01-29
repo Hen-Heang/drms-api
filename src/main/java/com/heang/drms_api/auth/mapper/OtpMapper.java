@@ -7,33 +7,47 @@ import org.apache.ibatis.annotations.Param;
 
 import java.sql.Timestamp;
 
-
 @Mapper
 public interface OtpMapper {
 
-    AppUser checkIfActivatedByDistributorEmail(@Param("email") String email);
-    AppUser checkIfActivatedByRetailerEmail(@Param("email") String email);
+    // ======================
+    // ACTIVATION CHECK
+    // ======================
+    AppUser checkIfActivatedByPartnerEmail(@Param("email") String email);
+    AppUser checkIfActivatedByMerchantEmail(@Param("email") String email);
 
-    Otp generateDistributorOtp(
+    // ======================
+    // GENERATE OTP
+    // ======================
+    Otp generatePartnerOtp(
             @Param("currentUserId") Integer currentUserId,
             @Param("otpNumber") Integer otpNumber,
             @Param("email") String email,
             @Param("time") Timestamp time
     );
 
-    Otp generateRetailerOtp(
+    Otp generateMerchantOtp(
             @Param("currentUserId") Integer currentUserId,
             @Param("otpNumber") Integer otpNumber,
             @Param("email") String email,
             @Param("time") Timestamp time
     );
 
-    AppUser getUserDistributorByEmail(@Param("email") String email);
-    AppUser getUserRetailerByEmail(@Param("email") String email);
+    // ======================
+    // GET USER
+    // ======================
+    AppUser getUserPartnerByEmail(@Param("email") String email);
+    AppUser getUserMerchantByEmail(@Param("email") String email);
 
-    Otp getDistributorOtpByEmail(@Param("email") String email);
-    Otp getRetailerOtpByEmail(@Param("email") String email);
+    // ======================
+    // GET OTP
+    // ======================
+    Otp getPartnerOtpByEmail(@Param("email") String email);
+    Otp getMerchantOtpByEmail(@Param("email") String email);
 
-    String verifyDistributor(@Param("email") String email);
-    String verifyRetailer(@Param("email") String email);
+    // ======================
+    // VERIFY EMAIL
+    // ======================
+    String verifyPartner(@Param("email") String email);
+    String verifyMerchant(@Param("email") String email);
 }

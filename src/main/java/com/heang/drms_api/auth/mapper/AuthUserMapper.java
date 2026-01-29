@@ -9,41 +9,67 @@ import org.apache.ibatis.annotations.Param;
 @Mapper
 public interface AuthUserMapper {
 
-    AppUser insertDistributorUser(@Param("user") AppUserRequest user);
+    // ======================
+    // INSERT
+    // ======================
+    AppUser insertPartnerUser(@Param("user") AppUserRequest user);
 
-    AppUser insertRetailerUser(@Param("user") AppUserRequest user);
+    AppUser insertMerchantUser(@Param("user") AppUserRequest user);
 
-    AppUser findDistributorUserByEmail(@Param("email") String email);
+    // ======================
+    // FIND USERS
+    // ======================
+    AppUser findPartnerUserByEmail(@Param("email") String email);
 
-    AppUser findDistributorUserById(@Param("id") int id);
+    AppUser findPartnerUserById(@Param("id") int id);
 
-    AppUser findRetailerUserByEmail(@Param("email") String email);
+    AppUser findMerchantUserByEmail(@Param("email") String email);
 
-    boolean checkPhoneNumberFromDistributorPhone(@Param("phone") String phone);
+    // ======================
+    // PHONE CHECKS
+    // ======================
+    boolean checkPhoneNumberFromPartnerPhone(@Param("phone") String phone);
 
-    boolean checkPhoneNumberFromDistributorDetail(@Param("phone") String phone);
+    boolean checkPhoneNumberFromPartnerDetail(@Param("phone") String phone);
 
-    boolean checkPhoneNumberFromRetailerPhone(@Param("phone") String phone);
+    boolean checkPhoneNumberFromMerchantPhone(@Param("phone") String phone);
 
-    boolean checkPhoneNumberFromRetailerDetail(@Param("phone") String phone);
+    boolean checkPhoneNumberFromMerchantDetail(@Param("phone") String phone);
 
-    int getRoleIdByMail(@Param("email") String email);
+    // ======================
+    // ROLE ID
+    // ======================
+    int getRoleIdByMailPartner(@Param("email") String email);
 
-    int getRoleIdByMailRetailer(@Param("email") String email);
+    int getRoleIdByMailMerchant(@Param("email") String email);
 
-    boolean getVerifyDistributorEmail(@Param("email") String email);
+    // ======================
+    // VERIFIED
+    // ======================
+    boolean getVerifyPartnerEmail(@Param("email") String email);
 
-    boolean getVerifyRetailerEmail(@Param("email") String email);
+    boolean getVerifyMerchantEmail(@Param("email") String email);
 
-    AppUser updateDistributorUser(@Param("req") JwtChangePasswordRequest req);
+    // ======================
+    // UPDATE PASSWORD
+    // ======================
+    AppUser updatePartnerUser(@Param("req") JwtChangePasswordRequest req);
 
-    AppUser updateRetailerUser(@Param("req") JwtChangePasswordRequest req);
+    AppUser updateMerchantUser(@Param("req") JwtChangePasswordRequest req);
 
-    String updateForgetDistributorUser(@Param("email") String email, @Param("newPassword") String newPassword);
+    // ======================
+    // FORGET PASSWORD
+    // ======================
+    String updateForgetPartnerUser(@Param("email") String email,
+                                   @Param("newPassword") String newPassword);
 
-    String updateForgetRetailerUser(@Param("email") String email, @Param("newPassword") String newPassword);
+    String updateForgetMerchantUser(@Param("email") String email,
+                                    @Param("newPassword") String newPassword);
 
-    int getUserIdByMailDistributor(@Param("email") String email);
+    // ======================
+    // GET USER ID
+    // ======================
+    int getUserIdByMailPartner(@Param("email") String email);
 
-    int getUserIdByMailRetailer(@Param("email") String email);
+    int getUserIdByMailMerchant(@Param("email") String email);
 }
