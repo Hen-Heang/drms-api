@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.heang.drms_api.partner.mapper.CategoryMapper">
+
+    <!-- ✅ Base mapping: tb_category -> Category -->
+    <resultMap id="categoryMap" type="com.heang.drms_api.partner.model.Category">
+        <id property="categoryId" column="id"/>
+        <result property="categoryName" column="name"/>
+        <result property="createdDate" column="created_date"/>
+        <result property="updatedDate" column="updated_date"/>
+    </resultMap>
+
+    <!-- ======================
+         Category
+    ======================= -->
+
+    <select id="getDuplicateCategory" parameterType="string" resultMap="categoryMap">
+        SELECT id, name, created_date, updated_date
+        FROM tb_category
+        WHERE name ILIKE #{name}
+        LIMIT 1
+    </select>
+
+    <select id="insertCategory" parameterType="map" resultMap="categoryMap">
+        INSERT INTO tb_category(name)
+        VALUES(#{category.name})
+        RETURNING id, name, created_date, updated_date
+    </select>
+
+    <select id="checkIfExist" parameterType="string" resultType="boolean">
+        SELECT EXISTS(
+        SELECT 1 FROM tb_category WHERE name ILIKE #{name}
+        )
+    </select>
+
+    <select id="checkDuplicateCategory" parameterType="string" resultType="boolean">
+        SELECT EXISTS(
+        SELECT 1 FROM tb_category WHERE name ILIKE #{name}
+        )
+    </select>
+
+    <select id="createNewCategory" parameterType="string" resultType="int">
+        INSERT INTO tb_category(name)
+        VALUES (#{name})
+        RETURNING id
+    </select>
+
+    <select id="getCategoryNameById" parameterType="int" resultType="string">
+        SELECT name FROM tb_category WHERE id = #{id}
+    </select>
+
+    <select id="getCategoryCreatedDateById" parameterType="int" resultType="string">
+        SELECT created_date FROM tb_category WHERE id = #{id}
+    </select>
+
+    <select id="getCategoryUpdatedById" parameterType="int" resultType="string">
+        SELECT updated_date FROM tb_category WHERE id = #{id}
+    </select>
+
+    <select id="getCategoryIdByName" parameterType="string" resultType="int">
+        SELECT id FROM tb_category WHERE name ILIKE #{name}
+    </select>
+
+    <!-- ======================
+         Store Category
+    ======================= -->
+
+    <select id="getAllCategory" parameterType="map" resultMap="categoryMap">
+        SELECT c.id, c.name, c.created_date, c.updated_date
+        FROM tb_category c
+        JOIN tb_store_category sc ON sc.category_id = c.id
+        WHERE sc.store_id = #{storeId}
+        ORDER BY c.id ASC
+        LIMIT #{pageSize}
+        OFFSET #{pageSize} * (#{pageNumber} - 1)
+    </select>
+
+    <select id="getCategoryById" parameterType="map" resultMap="categoryMap">
+        SELECT c.id, c.name, c.created_date, c.updated_date
+        FROM tb_category c
+        JOIN tb_store_category sc ON sc.category_id = c.id
+        WHERE sc.store_id = #{storeId}
+        AND c.id = #{id}
+    </select>
+
+    <select id="editCategory" parameterType="map" resultMap="categoryMap">
+        UPDATE tb_store_category
+        SET category_id = #{categoryId}
+        WHERE store_id = #{storeId}
+        AND category_id = #{id}
+        RETURNING #{categoryId} AS id,
+        (SELECT name FROM tb_category WHERE id = #{categoryId}) AS name,
+        (SELECT created_date FROM tb_category WHERE id = #{categoryId}) AS created_date,
+        (SELECT updated_date FROM tb_category WHERE id = #{categoryId}) AS updated_date
+    </select>
+
+    <select id="deleteCategory" parameterType="map" resultType="string">
+        DELETE FROM tb_store_category
+        WHERE category_id = #{id}
+        AND store_id = #{storeId}
+        RETURNING '1'
+    </select>
+
+    <select id="getStoreIdByCurrentUserId" parameterType="int" resultType="int">
+        SELECT id FROM tb_store
+        WHERE partner_account_id = #{userId}
+    </select>
+
+    <insert id="addCategoryToStore" parameterType="map">
+        INSERT INTO tb_store_category(store_id, category_id)
+        VALUES(#{storeId}, #{categoryId})
+    </insert>
+
+    <select id="getCategoryInCurrentStoreId" parameterType="map" resultType="int">
+        SELECT id
+        FROM tb_store_category
+        WHERE store_id = #{storeId}
+        AND category_id = #{categoryId}
+    </select>
+
+    <select id="getCategoryByCurrentUserId" parameterType="int" resultMap="categoryMap">
+        SELECT c.id, c.name, c.created_date, c.updated_date
+        FROM tb_category c
+        JOIN tb_store_category sc ON sc.category_id = c.id
+        WHERE sc.store_id = #{storeId}
+        ORDER BY c.id
+    </select>
+
+    <select id="checkIfStoreCategoryDuplicate" parameterType="map" resultType="boolean">
+        SELECT EXISTS(
+        SELECT 1
+        FROM tb_store_category
+        WHERE store_id = #{storeId}
+        AND category_id = #{categoryId}
+        )
+    </select>
+
+    <select id="findTotalCategory" parameterType="int" resultType="int">
+        SELECT COUNT(*)
+        FROM tb_store_category
+        WHERE store_id = #{storeId}
+    </select>
+
+    <select id="searchCategoryByName" parameterType="map" resultMap="categoryMap">
+        SELECT c.id, c.name, c.created_date, c.updated_date
+        FROM tb_category c
+        JOIN tb_store_category sc ON sc.category_id = c.id
+        WHERE sc.store_id = #{storeId}
+        AND c.name ILIKE '%' || #{name} || '%'
+        ORDER BY c.id ASC
+        LIMIT #{pageSize}
+        OFFSET #{pageSize} * (#{pageNumber} - 1)
+    </select>
+
+    <select id="storeIsExist" parameterType="int" resultType="boolean">
+        SELECT EXISTS(
+        SELECT 1 FROM tb_store WHERE partner_account_id = #{currentUserId}
+        )
+    </select>
+
+    <!-- ======================
+         Product Category move/replace
+    ======================= -->
+
+    <select id="moveProductCategory" parameterType="map" resultType="string">
+        UPDATE tb_store_product_detail
+        SET category_id = 113
+        WHERE category_id = #{id}
+        AND store_id = #{storeId}
+        RETURNING '113'
+    </select>
+
+    <select id="checkIfCategoryHaveProduct" parameterType="map" resultType="boolean">
+        SELECT EXISTS(
+        SELECT 1
+        FROM tb_store_product_detail
+        WHERE store_id = #{storeId}
+        AND category_id = #{id}
+        )
+    </select>
+
+    <update id="replaceProductCategory" parameterType="map">
+        UPDATE tb_store_product_detail
+        SET category_id = #{newId}
+        WHERE category_id = #{oldId}
+        AND store_id = #{storeId}
+    </update>
+
+    <select id="getCategoryIdByProductId" parameterType="int" resultType="int">
+        SELECT category_id
+        FROM tb_store_product_detail
+        WHERE id = #{id}
+    </select>
+
+    <select id="createNewStoreCategory" parameterType="map" resultMap="categoryMap">
+        WITH rows AS (
+        INSERT INTO tb_store_category(store_id, category_id)
+        VALUES (#{storeId}, #{newCategoryId})
+        RETURNING category_id
+        )
+        SELECT id, name, created_date, updated_date
+        FROM tb_category
+        WHERE id = (SELECT category_id FROM rows)
+    </select>
+
+</mapper>

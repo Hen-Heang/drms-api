@@ -1,4 +1,4 @@
-package com.heang.drms_api.partner.dto;
+package com.heang.drms_api.partner.dto.partnerInfo;
 
 
 import lombok.*;

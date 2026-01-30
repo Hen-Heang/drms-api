@@ -6,8 +6,8 @@ import com.heang.drms_api.partner.model.product.Product;
 import com.heang.drms_api.partner.model.store.Store;
 import com.heang.drms_api.merchant.model.StoreMerchant;
 import com.heang.drms_api.partner.model.store.StoreRating;
-import com.heang.drms_api.partner.model.store.StoreRatingRequest;
-import com.heang.drms_api.partner.model.store.StoreRequest;
+import com.heang.drms_api.partner.dto.store.StoreRatingRequest;
+import com.heang.drms_api.partner.dto.store.StoreRequest;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -125,8 +125,9 @@ public interface PartnerStoreMapper {
 
     boolean checkIfStoreIsDisable(@Param("currentUserId") Integer currentUserId);
 
-    void addAdditionalPhone(@Param("phone") String phone,
-                            @Param("id") Integer id);
+    void addAdditionalPhone(@Param("storeId") Integer storeId,
+                            @Param("phone") String phone);
+
 
     void deleteAdditionalPhone(@Param("storeId") Integer storeId);
 

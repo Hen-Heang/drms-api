@@ -46,7 +46,7 @@ public interface AuthUserMapper {
     // ======================
     // VERIFIED
     // ======================
-    boolean getVerifyPartnerEmail(@Param("email") String email);
+    Boolean getVerifyPartnerEmail(@Param("email") String email);
 
     boolean getVerifyMerchantEmail(@Param("email") String email);
 

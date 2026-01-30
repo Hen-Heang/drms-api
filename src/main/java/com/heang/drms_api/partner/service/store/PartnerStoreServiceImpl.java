@@ -1,4 +1,4 @@
-package com.heang.drms_api.partner.service;
+package com.heang.drms_api.partner.service.store;
 
 import com.heang.drms_api.auth.mapper.AuthUserMapper;
 import com.heang.drms_api.auth.model.AppUser;
@@ -8,7 +8,7 @@ import com.heang.drms_api.exception.InternalServerErrorException;
 import com.heang.drms_api.exception.UnauthorizedException;
 import com.heang.drms_api.partner.mapper.PartnerStoreMapper;
 import com.heang.drms_api.partner.model.store.Store;
-import com.heang.drms_api.partner.model.store.StoreRequest;
+import com.heang.drms_api.partner.dto.store.StoreRequest;
 import lombok.RequiredArgsConstructor;
 import org.apache.ibatis.javassist.NotFoundException;
 import org.springframework.stereotype.Service;
@@ -89,7 +89,7 @@ public class PartnerStoreServiceImpl implements PartnerStoreService {
                 if (phone.isBlank()){
                     continue;
                 }
-                partnerStoreMapper.addAdditionalPhone(phone, store.getId());
+                partnerStoreMapper.addAdditionalPhone(store.getId(), phone);
             }
             if (store == null) {
                 throw new InternalServerErrorException("Insert failed.");
@@ -157,7 +157,7 @@ public class PartnerStoreServiceImpl implements PartnerStoreService {
             if (phone.isBlank()){
                 continue;
             }
-            partnerStoreMapper.addAdditionalPhone(phone, store.getId());
+            partnerStoreMapper.addAdditionalPhone(store.getId(),phone );
         }
         if (store == null) {
             throw new InternalServerErrorException("Update failed.");

@@ -1,7 +1,7 @@
-package com.heang.drms_api.partner.service;
+package com.heang.drms_api.partner.service.store;
 
 import com.heang.drms_api.partner.model.store.Store;
-import com.heang.drms_api.partner.model.store.StoreRequest;
+import com.heang.drms_api.partner.dto.store.StoreRequest;
 import org.apache.ibatis.javassist.NotFoundException;
 import java.text.ParseException;
 

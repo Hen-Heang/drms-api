@@ -1,5 +1,5 @@
 package com.heang.drms_api.partner.mapper;
-import com.heang.drms_api.partner.dto.PartnerRequest;
+import com.heang.drms_api.partner.dto.partnerInfo.PartnerRequest;
 import com.heang.drms_api.partner.model.Partner;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;

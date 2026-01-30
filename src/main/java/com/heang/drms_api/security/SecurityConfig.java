@@ -24,15 +24,6 @@ public class SecurityConfig {
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
     private final JwtRequestFilter jwtRequestFilter;
 
-//    public SecurityConfig(JwtUserDetailsServiceImpl jwtUserDetailsService,
-//                          PasswordEncoder passwordEncoder,
-//                          JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint,
-//                          JwtRequestFilter jwtRequestFilter) {
-//        this.jwtUserDetailsService = jwtUserDetailsService;
-//        this.passwordEncoder = passwordEncoder;
-//        this.jwtAuthenticationEntryPoint = jwtAuthenticationEntryPoint;
-//        this.jwtRequestFilter = jwtRequestFilter;
-//    }
 
     @Bean DaoAuthenticationProvider daoAuthenticationProvider() {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider(jwtUserDetailsService);
@@ -43,7 +34,7 @@ public class SecurityConfig {
     @Bean public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.cors(Customizer.withDefaults())
                 .csrf(AbstractHttpConfigurer::disable)
-                .authorizeHttpRequests(auth -> auth .requestMatchers("/api/v1/retailer/**").hasAuthority("MERCHANT")
+                .authorizeHttpRequests(auth -> auth .requestMatchers("/api/v1/merchant/**").hasAuthority("MERCHANT")
                         .requestMatchers("/api/v1/partner/**").hasAuthority("PARTNER")
                         .requestMatchers("/authorization/**",
                                 "/authorization/login",

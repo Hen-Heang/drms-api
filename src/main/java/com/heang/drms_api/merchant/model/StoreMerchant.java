@@ -12,7 +12,7 @@ public class StoreMerchant {
     private String primaryPhone;
     private List<String> additionalPhone;
     private List<Category> categories;
-    private Integer distributorAccountId;
+    private Integer partnerAccountId;
     private String description;
     private String createdDate;
     private String updatedDate;

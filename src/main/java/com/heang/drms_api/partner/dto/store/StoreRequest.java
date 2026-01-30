@@ -1,4 +1,4 @@
-package com.heang.drms_api.partner.model.store;
+package com.heang.drms_api.partner.dto.store;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

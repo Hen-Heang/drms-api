@@ -191,8 +191,48 @@
         ORDER BY ${by} DESC </select>
 
     <select id="checkStoreIfCreated" parameterType="int" resultType="int">
-        SELECT CASE WHEN COUNT(*) >0 THEN1 ELSE0 END FROM tb_store WHERE partner_account_id = #{currentUserId}
+        SELECT CASE WHEN COUNT(*) >0 THEN 1 ELSE 0 END
+        FROM tb_store
+        WHERE partner_account_id = #{currentUserId}
     </select>
 
+    <select id="checkDuplicateStoreName" parameterType="string" resultType="boolean">
+        SELECT EXISTS(
+        SELECT 1
+        FROM tb_store
+        WHERE name ILIKE #{name}
+        )
+    </select>
+    <select id="getRating" parameterType="int" resultType="double">
+        SELECT COALESCE(AVG(rated_star), 0)
+        FROM tb_rating_detail
+        WHERE store_id = #{id}
+    </select>
+
+    <select id="getRatingCount" parameterType="int" resultType="int">
+        SELECT COALESCE(COUNT(rated_star), 0)
+        FROM tb_rating_detail
+        WHERE store_id = #{storeId}
+    </select>
+
+    <select id="getAdditionalPhone" parameterType="int" resultType="string">
+        SELECT phone
+        FROM tb_store_phone
+        WHERE store_id = #{storeId}
+    </select>
+    <select id="getStoreIdByUserId" parameterType="int" resultType="int">
+        SELECT id
+        FROM tb_store
+        WHERE partner_account_id = #{currentUserId}
+
+    </select>
+    <delete id="deleteAdditionalPhone" parameterType="int">
+        DELETE FROM tb_store_phone
+        WHERE store_id = #{storeId}
+    </delete>
+    <insert id="addAdditionalPhone" parameterType="map">
+        INSERT INTO tb_store_phone (store_id, phone)
+        VALUES (#{storeId}, #{phone})
+    </insert>
 </mapper>
 
